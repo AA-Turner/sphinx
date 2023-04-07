@@ -384,6 +384,9 @@ module = [
 disallow_any_generics = false
 
 [tool.pytest.ini_options]
+addopts = [
+    "--random-order-bucket=module",
+]
 filterwarnings = [
     "all",
     "ignore::DeprecationWarning:docutils.io",

@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 import sys
 from collections import namedtuple
 from io import StringIO
 from typing import Any, Callable, Generator
+from pathlib import Path
 
 import pytest
 
@@ -57,7 +59,8 @@ class SharedResult:
 
 @pytest.fixture()
 def app_params(request: Any, test_params: dict, shared_result: SharedResult,
-               sphinx_test_tempdir: str, rootdir: str) -> tuple[dict, dict]:
+               sphinx_test_tempdir: str, rootdir: str,
+               tmp_path: Path) -> tuple[dict, dict]:
     """
     Parameters that are specified by 'pytest.mark.sphinx' for
     sphinx.application.Sphinx initialization
@@ -89,6 +92,7 @@ def app_params(request: Any, test_params: dict, shared_result: SharedResult,
 
     testroot = kwargs.pop('testroot', 'root')
     kwargs['srcdir'] = srcdir = sphinx_test_tempdir / kwargs.get('srcdir', testroot)
+    kwargs['srcdir'] = srcdir = util.path(tmp_path) / kwargs.get('srcdir', testroot)  # 6m45s
 
     # special support for sphinx/tests
     if rootdir and not srcdir.exists():

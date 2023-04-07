@@ -2,6 +2,7 @@
 
 import os
 import re
+import shutil
 from itertools import chain, cycle
 from pathlib import Path
 from unittest.mock import ANY, call, patch
@@ -1219,14 +1220,20 @@ def test_javscript_loading_method(app):
 
 @pytest.mark.sphinx('html', testroot='basic', confoverrides={'html_copy_source': False})
 def test_html_copy_source(app):
+    source_path = app.outdir / '_sources' / 'index.rst.txt'
+    open(source_path, 'wb').close()
+    os.remove(source_path)
     app.builder.build_all()
-    assert not (app.outdir / '_sources' / 'index.rst.txt').exists()
+    assert not source_path.exists()
 
 
 @pytest.mark.sphinx('html', testroot='basic', confoverrides={'html_sourcelink_suffix': '.txt'})
 def test_html_sourcelink_suffix(app):
+    source_path = app.outdir / '_sources' / 'index.rst.txt'
+    open(source_path, 'wb').close()
+    os.remove(source_path)
     app.builder.build_all()
-    assert (app.outdir / '_sources' / 'index.rst.txt').exists()
+    assert source_path.exists()
 
 
 @pytest.mark.sphinx('html', testroot='basic', confoverrides={'html_sourcelink_suffix': '.rst'})

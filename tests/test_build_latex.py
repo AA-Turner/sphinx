@@ -26,7 +26,7 @@ try:
 except ImportError:
     from sphinx.util.osutil import _chdir as chdir
 
-LATEX_ENGINES = ['pdflatex', 'lualatex', 'xelatex']
+LATEX_ENGINES = ['pdflatex']
 DOCCLASSES = ['howto', 'manual']
 STYLEFILES = ['article.cls', 'fancyhdr.sty', 'titlesec.sty', 'amsmath.sty',
               'framed.sty', 'color.sty', 'fancyvrb.sty',
