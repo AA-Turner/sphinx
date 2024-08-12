@@ -73,7 +73,7 @@ def app_params(
     request: Any,
     test_params: dict[str, Any],
     shared_result: SharedResult,
-    sphinx_test_tempdir: str,
+    sphinx_test_tempdir: Path,
     rootdir: Path,
 ) -> _app_params:
     """
@@ -91,6 +91,7 @@ def app_params(
         kwargs.update(info.kwargs)
 
     args = [pargs[i] for i in sorted(pargs.keys())]
+    # assert len(args) >= 1, 'buildername is required'
 
     # ##### process pytest.mark.test_params
     if test_params['shared_result']:
@@ -103,13 +104,26 @@ def app_params(
 
     # ##### prepare Application params
 
-    testroot = kwargs.pop('testroot', 'root')
-    kwargs['srcdir'] = srcdir = sphinx_test_tempdir / kwargs.get('srcdir', testroot)
+    test_root = kwargs.pop('testroot', 'root')
+    test_root_path = rootdir / ('test-' + test_root)
+    tmp_srcdir = sphinx_test_tempdir / kwargs.get('srcdir', test_root)
+
+    if 'srcdir' in kwargs:
+        copy_test_root = True
+        srcdir = tmp_srcdir
+    else:
+        copy_test_root = '_copy_test_root' in kwargs
+        if copy_test_root:
+            srcdir = tmp_srcdir
+        else:
+            srcdir = test_root_path
 
     # special support for sphinx/tests
-    if rootdir and not srcdir.exists():
-        testroot_path = rootdir / ('test-' + testroot)
-        shutil.copytree(testroot_path, srcdir)
+    if copy_test_root and test_root_path.is_dir():
+        shutil.copytree(test_root_path, tmp_srcdir, dirs_exist_ok=True)
+
+    kwargs['srcdir'] = srcdir
+    kwargs.setdefault('builddir', tmp_srcdir / '_build')
 
     return _app_params(args, kwargs)
 
@@ -152,6 +166,7 @@ def app(
     Provides the 'sphinx.application.Sphinx' object
     """
     args, kwargs = app_params
+    assert 'builddir' in kwargs
     app_ = make_app(*args, **kwargs)
     yield app_
 

@@ -151,6 +151,7 @@ class SphinxTestApp(sphinx.application.Sphinx):
             self.docutils_conf_path.write_text(docutils_conf, encoding='utf8')
 
         if builddir is None:
+            assert 'roots-read-only' not in str(builddir)
             builddir = srcdir / '_build'
 
         confdir = srcdir
@@ -194,8 +195,13 @@ class SphinxTestApp(sphinx.application.Sphinx):
     def cleanup(self, doctrees: bool = False) -> None:
         sys.path[:] = self._saved_path
         _clean_up_global_state()
-        with contextlib.suppress(FileNotFoundError):
+        try:
             os.remove(self.docutils_conf_path)
+        except FileNotFoundError:
+            pass
+        except OSError as exc:
+            if exc.errno != 30:  # Ignore "read-only file system" errors
+                raise
 
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__} buildername={self.builder.name!r}>'
