@@ -690,7 +690,7 @@ def test_inspect_main_url(capsys):
     assert stderr == ''
 
 
-@pytest.mark.sphinx('html', testroot='ext-intersphinx-role')
+@pytest.mark.sphinx('html', testroot='ext-intersphinx-role', _copy_test_root=True)
 def test_intersphinx_role(app):
     inv_file = app.srcdir / 'inventory'
     inv_file.write_bytes(INVENTORY_V2)

@@ -27,6 +27,7 @@ def test_html_with_default_docutilsconf(app):
     testroot='docutilsconf',
     freshenv=True,
     docutils_conf='[restructuredtext parser]\ntrim_footnote_reference_space: true\n',
+    _copy_test_root=True,
 )
 def test_html_with_docutilsconf(app):
     with patch_docutils(app.confdir):

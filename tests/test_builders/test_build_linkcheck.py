@@ -254,7 +254,7 @@ def test_too_many_retries(app: SphinxTestApp) -> None:
 @pytest.mark.sphinx(
     'linkcheck',
     testroot='linkcheck-raw-node',
-    freshenv=True,
+    freshenv=True, _copy_test_root=True,
 )
 def test_raw_node(app: SphinxTestApp) -> None:
     with serve_application(app, OKHandler) as address:

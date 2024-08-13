@@ -5,7 +5,7 @@ import pytest
 from sphinx.ext.autosummary.generate import setup_documenters
 
 
-@pytest.mark.sphinx('html', testroot='templating')
+@pytest.mark.sphinx('html', testroot='templating', _copy_test_root=True)
 def test_layout_overloading(make_app, app_params):
     args, kwargs = app_params
     app = make_app(*args, **kwargs)
@@ -16,7 +16,7 @@ def test_layout_overloading(make_app, app_params):
     assert '<!-- layout overloading -->' in result
 
 
-@pytest.mark.sphinx('html', testroot='templating')
+@pytest.mark.sphinx('html', testroot='templating', _copy_test_root=True)
 def test_autosummary_class_template_overloading(make_app, app_params):
     args, kwargs = app_params
     app = make_app(*args, **kwargs)
@@ -33,7 +33,7 @@ def test_autosummary_class_template_overloading(make_app, app_params):
 @pytest.mark.sphinx(
     'html',
     testroot='templating',
-    confoverrides={'autosummary_context': {'sentence': 'foobar'}},
+    confoverrides={'autosummary_context': {'sentence': 'foobar'}}, _copy_test_root=True,
 )
 def test_autosummary_context(make_app, app_params):
     args, kwargs = app_params

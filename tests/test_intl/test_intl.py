@@ -681,7 +681,7 @@ def test_gettext_buildr_ignores_only_directive(app):
 
 
 @sphinx_intl
-@pytest.mark.sphinx('html', testroot='intl')
+@pytest.mark.sphinx('html', testroot='intl', _copy_test_root=True)
 def test_node_translated_attribute(app):
     app.build(filenames=[app.srcdir / 'translation_progress.txt'])
 
@@ -695,7 +695,7 @@ def test_node_translated_attribute(app):
 
 
 @sphinx_intl
-@pytest.mark.sphinx('html', testroot='intl')
+@pytest.mark.sphinx('html', testroot='intl', _copy_test_root=True)
 def test_translation_progress_substitution(app):
     app.build(filenames=[app.srcdir / 'translation_progress.txt'])
 
@@ -713,7 +713,7 @@ def test_translation_progress_substitution(app):
         'locale_dirs': ['.'],
         'gettext_compact': False,
         'translation_progress_classes': True,
-    },
+    }, _copy_test_root=True,
 )
 def test_translation_progress_classes_true(app):
     app.build(filenames=[app.srcdir / 'translation_progress.txt'])
@@ -844,7 +844,7 @@ def mock_time_and_i18n(
 @pytest.mark.sphinx(
     'dummy',
     testroot='builder-gettext-dont-rebuild-mo',
-    freshenv=True,
+    freshenv=True, _copy_test_root=True,
 )
 def test_dummy_should_rebuild_mo(mock_time_and_i18n, make_app, app_params):
     mock, clock = mock_time_and_i18n
@@ -906,7 +906,7 @@ def test_dummy_should_rebuild_mo(mock_time_and_i18n, make_app, app_params):
 @pytest.mark.sphinx(
     'gettext',
     testroot='builder-gettext-dont-rebuild-mo',
-    freshenv=True,
+    freshenv=True, _copy_test_root=True,
 )
 def test_gettext_dont_rebuild_mo(mock_time_and_i18n, app):
     mock, clock = mock_time_and_i18n
@@ -1649,7 +1649,7 @@ def test_additional_targets_should_be_translated(app):
             'raw',
             'image',
         ],
-    },
+    }, _copy_test_root=True,
 )
 def test_additional_targets_should_be_translated_substitution_definitions(app):
     app.build(force_all=True)
@@ -1685,7 +1685,7 @@ def test_text_references(app):
         'language': _CATALOG_LOCALE,
         'locale_dirs': ['.'],
         'gettext_compact': False,
-    },
+    }, _copy_test_root=True,
 )
 def test_text_prolog_epilog_substitution(app):
     app.build()
@@ -1918,7 +1918,7 @@ def test_gettext_disallow_fuzzy_translations(app):
 @pytest.mark.sphinx(
     'html',
     testroot='basic',
-    confoverrides={'language': 'de', 'html_sidebars': {'**': ['searchbox.html']}},
+    confoverrides={'language': 'de', 'html_sidebars': {'**': ['searchbox.html']}}, _copy_test_root=True,
 )
 def test_customize_system_message(make_app, app_params):
     try:
