@@ -46,48 +46,64 @@ PDFLATEX = latexmk -pdf -dvi- -ps-
 {% endif %}
 
 {% if latex_engine != 'xelatex' -%}
-%.dvi: %.tex FORCE_MAKE
+%.dvi: %.tex
 	$(LATEX) $(LATEXMKOPTS) '$<'
 
 {% endif -%}
 %.ps: %.dvi
 	dvips '$<'
 
-%.pdf: %.tex FORCE_MAKE
+%.pdf: %.tex
 	$(PDFLATEX) $(LATEXMKOPTS) '$<'
 
+.PHONY: all
 all: $(ALLPDF)
 
+.PHONY: all-dvi
 all-dvi: $(ALLDVI)
 
+.PHONY: all-ps
 all-ps: $(ALLPS)
 
+.PHONY: all-pdf
 all-pdf: $(ALLPDF)
 
-zip: all-$(FMT)
-	mkdir $(ARCHIVEPREFIX)docs-$(FMT)
-	cp $(ALLPDF) $(ARCHIVEPREFIX)docs-$(FMT)
-	zip -q -r -9 $(ARCHIVEPREFIX)docs-$(FMT).zip $(ARCHIVEPREFIX)docs-$(FMT)
-	rm -r $(ARCHIVEPREFIX)docs-$(FMT)
+.PHONY: zip
+zip: $(ARCHIVEPREFIX)docs-$(FMT).zip
 
-tar: all-$(FMT)
-	mkdir $(ARCHIVEPREFIX)docs-$(FMT)
-	cp $(ALLPDF) $(ARCHIVEPREFIX)docs-$(FMT)
-	tar cf $(ARCHIVEPREFIX)docs-$(FMT).tar $(ARCHIVEPREFIX)docs-$(FMT)
-	rm -r $(ARCHIVEPREFIX)docs-$(FMT)
+.PHONY: tar
+tar: $(ARCHIVEPREFIX)docs-$(FMT).tar
 
-gz: tar
+.PHONY: gz
+gz: $(ARCHIVEPREFIX)docs-$(FMT).tar.gz
+
+.PHONY: bz2
+bz2: $(ARCHIVEPREFIX)docs-$(FMT).tar.bz2
+
+.PHONY: xz
+xz: $(ARCHIVEPREFIX)docs-$(FMT).tar.xz
+
+$(ARCHIVEPREFIX)docs-$(FMT): all-$(FMT)
+    mkdir $(ARCHIVEPREFIX)docs-$(FMT)
+    cp $(ALLPDF) $(ARCHIVEPREFIX)docs-$(FMT)
+
+$(ARCHIVEPREFIX)docs-$(FMT).zip: $(ARCHIVEPREFIX)docs-$(FMT)
+	zip --quiet --recurse-paths -9 $(ARCHIVEPREFIX)docs-$(FMT).zip $(ARCHIVEPREFIX)docs-$(FMT)
+
+$(ARCHIVEPREFIX)docs-$(FMT).tar: $(ARCHIVEPREFIX)docs-$(FMT)
+	tar -cf $(ARCHIVEPREFIX)docs-$(FMT).tar $(ARCHIVEPREFIX)docs-$(FMT)
+
+$(ARCHIVEPREFIX)docs-$(FMT).tar.gz: $(ARCHIVEPREFIX)docs-$(FMT)
 	# -n to omit mtime from gzip headers
-	gzip -n -9 < $(ARCHIVEPREFIX)docs-$(FMT).tar > $(ARCHIVEPREFIX)docs-$(FMT).tar.gz
+    tar -I 'gzip -9 -n' -cf $(ARCHIVEPREFIX)docs-$(FMT).tar.gz $(ARCHIVEPREFIX)docs-$(FMT)
 
-bz2: tar
-	bzip2 -9 -k $(ARCHIVEPREFIX)docs-$(FMT).tar
+$(ARCHIVEPREFIX)docs-$(FMT).tar.bz2: $(ARCHIVEPREFIX)docs-$(FMT)
+	tar -I 'bzip2 -9' -cf $(ARCHIVEPREFIX)docs-$(FMT).tar.bz2 $(ARCHIVEPREFIX)docs-$(FMT)
 
-xz: tar
-	xz -9 -k $(ARCHIVEPREFIX)docs-$(FMT).tar
+$(ARCHIVEPREFIX)docs-$(FMT).tar.xz: $(ARCHIVEPREFIX)docs-$(FMT)
+	tar -I 'xz -9' -cf $(ARCHIVEPREFIX)docs-$(FMT).tar.xz $(ARCHIVEPREFIX)docs-$(FMT)
 
+.PHONY: clean
 clean:
 	rm -f *.log *.ind *.aux *.toc *.syn *.idx *.out *.ilg *.pla *.ps *.tar *.tar.gz *.tar.bz2 *.tar.xz $(ALLPDF) $(ALLDVI) $(ALLXDV) *.fls *.fdb_latexmk
-
-.PHONY: all all-pdf all-dvi all-ps clean zip tar gz bz2 xz
-.PHONY: FORCE_MAKE
+    rm -rf $(ARCHIVEPREFIX)docs-pdf $(ARCHIVEPREFIX)docs-dvi $(ARCHIVEPREFIX)docs-ps
