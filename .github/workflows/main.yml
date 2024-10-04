@@ -65,7 +65,7 @@ jobs:
 
   deadsnakes-free-threraded-core-dumps:
     runs-on: ubuntu-latest
-    name: Python ${{ matrix.python }} (Docutils ${{ matrix.docutils }}; free-threaded)
+    name: Python ${{ matrix.python }} (Docutils ${{ matrix.docutils }}; core-dump)
     strategy:
       fail-fast: false
       matrix:
@@ -98,9 +98,10 @@ jobs:
     - name: Test with pytest
       run: |
         sudo mkdir -p /cores
-        sudo ulimit -c unlimited
+        sudo chmod 777 /cores
+        sudo bash -c 'echo "/cores/%e.%p.%t" > /proc/sys/kernel/core_pattern'
+        ulimit -c unlimited
         python -m pytest -vv --durations 25
-        sudo chmod -R +rwx /cores
       env:
         PYTHONWARNINGS: "error"  # treat all warnings as errors
 
