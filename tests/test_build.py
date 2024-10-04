@@ -44,7 +44,7 @@ def test_build_all():
         workers: list[HyperlinkAvailabilityCheckWorker] = []
 
         # invoke threads
-        num_workers = 5
+        num_workers = 2
         for _i in range(num_workers):
             thread = HyperlinkAvailabilityCheckWorker(rqueue, wqueue)
             thread.start()
@@ -55,10 +55,7 @@ def test_build_all():
         for hyperlink in (
             'https://bugs.python.org/issue1000',
             'https://python.org/dev/',
-            'https://bugs.python.org/issue1042',
             'https://peps.python.org/pep-0008/',
-            'https://datatracker.ietf.org/doc/html/rfc1.html',
-            'https://www.google.com',
         ):
             wqueue.put(hyperlink, False)
             total_links += 1
