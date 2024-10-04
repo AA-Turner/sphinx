@@ -133,7 +133,7 @@ jobs:
       run: sudo python -m pip install --upgrade "docutils~=${{ matrix.docutils }}.0"
     # markupsafe._speedups has not declared that it can run safely without the GIL
     - name: Remove markupsafe._speedups
-      run: rm -rf "$(sudo python -c 'from markupsafe._speedups import __file__ as f; print(f)')"
+      run: sudo rm -rf "$(sudo python -c 'from markupsafe._speedups import __file__ as f; print(f)')"
     - name: Test with pytest
       run: |
         ulimit -c unlimited
