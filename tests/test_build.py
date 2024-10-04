@@ -1,16 +1,14 @@
 import queue
 import threading
 
-import urllib3
-
-_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64; rv:100.0) Gecko/20100101 Firefox/100.0'
+import requests
 
 
 class HyperlinkAvailabilityCheckWorker(threading.Thread):
     def __init__(self, rqueue, wqueue) -> None:
         self.rqueue = rqueue
         self.wqueue = wqueue
-        self.http = urllib3.PoolManager()
+        self._session = requests.Session()
         super().__init__(daemon=True)
 
     def run(self) -> None:
@@ -18,14 +16,13 @@ class HyperlinkAvailabilityCheckWorker(threading.Thread):
             uri = self.wqueue.get()
             if not uri:
                 # An empty hyperlink is a signal to shutdown the worker; cleanup resources here
-                self.http.clear()
+                self._session.close()
                 break
 
             try:
-                response = self.http.request(
+                response = self._session.request(
                     'HEAD',
                     url=uri,
-                    headers={'User-Agent': _USER_AGENT},
                     timeout=30,
                     verify=True,
                 )
