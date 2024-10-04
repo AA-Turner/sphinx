@@ -15,24 +15,20 @@ class HyperlinkAvailabilityCheckWorker(threading.Thread):
         while True:
             uri = self.wqueue.get()
             if not uri:
-                # An empty hyperlink is a signal to shutdown the worker; cleanup resources here
                 self._session.close()
                 break
 
-            try:
-                self._session.request(
-                    'HEAD',
-                    url=uri,
-                    timeout=30,
-                    verify=True,
-                )
-            except Exception:
-                pass
+            self._session.request(
+                'HEAD',
+                url=uri,
+                timeout=30,
+                verify=True,
+            )
             self.rqueue.put(uri)
             self.wqueue.task_done()
 
 
-def test_build_all():
+def test_crash():
     for i in range(1_000):
         print(f'loop: {i}')
 
@@ -74,4 +70,4 @@ if __name__ == '__main__':
 
     print(f'GIL enabled?: {sys._is_gil_enabled()}')
     print()
-    test_build_all()
+    test_crash()
