@@ -20,14 +20,12 @@ class HyperlinkAvailabilityCheckWorker(threading.Thread):
                 break
 
             try:
-                response = self._session.request(
+                self._session.request(
                     'HEAD',
                     url=uri,
                     timeout=30,
                     verify=True,
                 )
-                response.raise_for_status()
-                del response
             except Exception:
                 pass
             self.rqueue.put(uri)
