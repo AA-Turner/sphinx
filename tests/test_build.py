@@ -41,32 +41,23 @@ class HyperlinkAvailabilityCheckWorker(Thread):
                 self._session.close()
                 break
 
-            self._check_uri(uri)
-            self.rqueue.put(CheckResult(uri, '', '', 0))
-            self.wqueue.task_done()
-
-    def _check_uri(self, req_url: str) -> tuple[str, str, int]:
-        for retrieval_method, kwargs in [
-            (self._session.head, {'allow_redirects': True}),
-            (self._session.get, {'stream': True}),
-        ]:
             try:
-                response = retrieval_method(
-                    url=req_url,
+                response = self._session.head(
+                    url=uri,
                     auth=None,
                     headers={},
                     timeout=30,
-                    **kwargs,
+                    allow_redirects=True,
                     _user_agent=None,
                     _tls_info=(True, None),
                 )
                 # Copy data we need from the (closed) response
                 response.raise_for_status()
                 del response
-                break
-            except Exception as err:
-                return '', '', 0
-        return '', '', 0
+            except Exception:
+                pass
+            self.rqueue.put(CheckResult(uri, '', '', 0))
+            self.wqueue.task_done()
 
 
 def request_session_head(url, **kwargs):
