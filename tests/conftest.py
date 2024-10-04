@@ -63,20 +63,3 @@ def _cleanup_docutils() -> Iterator[None]:
     sys.path[:] = saved_path
 
     _clean_up_global_state()
-
-
-@pytest.fixture
-def _http_teapot(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    """Short-circuit HTTP requests.
-
-    Windows takes too long to fail on connections, hence this fixture.
-    """
-    # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/418
-    response = SimpleNamespace(status_code=418)
-
-    def _request(*args, **kwargs):
-        return response
-
-    with monkeypatch.context() as m:
-        m.setattr('sphinx.util.requests._Session.request', _request)
-        yield
