@@ -36,7 +36,7 @@ class HyperlinkAvailabilityCheckWorker(Thread):
     def run(self) -> None:
         while True:
             uri = self.wqueue.get()
-            if uri is None:
+            if not uri:
                 # An empty hyperlink is a signal to shutdown the worker; cleanup resources here
                 self._session.close()
                 break
@@ -112,4 +112,4 @@ def test_build_all(requests_head):
         # shutdown_threads
         wqueue.join()
         for _worker in workers:
-            wqueue.put(None, False)
+            wqueue.put('', False)
