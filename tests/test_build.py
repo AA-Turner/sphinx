@@ -24,12 +24,6 @@ HYPERLINKS = {
         docpath=TEST_ROOT / 'extensions.txt',
         lineno=7,
     ),
-    '#some-label': Hyperlink(
-        uri='#some-label',
-        docname='index',
-        docpath=TEST_ROOT / 'index.txt',
-        lineno=65,
-    ),
     'https://peps.python.org/pep-0008/': Hyperlink(
         uri='https://peps.python.org/pep-0008/',
         docname='markup',
@@ -42,83 +36,11 @@ HYPERLINKS = {
         docpath=TEST_ROOT / 'markup.txt',
         lineno=144,
     ),
-    '#envvar-HOME': Hyperlink(
-        uri='#envvar-HOME',
-        docname='markup',
-        docpath=TEST_ROOT / 'markup.txt',
-        lineno=146,
-    ),
-    '#cmdoption-python-c': Hyperlink(
-        uri='#cmdoption-python-c',
-        docname='markup',
-        docpath=TEST_ROOT / 'markup.txt',
-        lineno=167,
-    ),
-    '#ref1': Hyperlink(
-        uri='#ref1',
-        docname='markup',
-        docpath=TEST_ROOT / 'markup.txt',
-        lineno=322,
-    ),
-    '#ref-1': Hyperlink(
-        uri='#ref-1',
-        docname='markup',
-        docpath=TEST_ROOT / 'markup.txt',
-        lineno=322,
-    ),
     'https://www.google.com': Hyperlink(
         uri='https://www.google.com',
         docname='markup',
         docpath=TEST_ROOT / 'markup.txt',
         lineno=327,
-    ),
-    '#func_without_body': Hyperlink(
-        uri='#func_without_body',
-        docname='markup',
-        docpath=TEST_ROOT / 'markup.txt',
-        lineno=434,
-    ),
-    '#module-mod': Hyperlink(
-        uri='#module-mod',
-        docname='markup',
-        docpath=TEST_ROOT / 'markup.txt',
-        lineno=434,
-    ),
-    '#Time': Hyperlink(
-        uri='#Time',
-        docname='markup',
-        docpath=TEST_ROOT / 'markup.txt',
-        lineno=434,
-    ),
-    '#bar.baz': Hyperlink(
-        uri='#bar.baz',
-        docname='markup',
-        docpath=TEST_ROOT / 'markup.txt',
-        lineno=439,
-    ),
-    '#c.SphinxType': Hyperlink(
-        uri='#c.SphinxType',
-        docname='markup',
-        docpath=TEST_ROOT / 'markup.txt',
-        lineno=440,
-    ),
-    '#userdesc-myobj': Hyperlink(
-        uri='#userdesc-myobj',
-        docname='markup',
-        docpath=TEST_ROOT / 'markup.txt',
-        lineno=441,
-    ),
-    '#_CPPv4N1n5ArrayE': Hyperlink(
-        uri='#_CPPv4N1n5ArrayE',
-        docname='markup',
-        docpath=TEST_ROOT / 'markup.txt',
-        lineno=442,
-    ),
-    '#cmdoption-perl-c': Hyperlink(
-        uri='#cmdoption-perl-c',
-        docname='markup',
-        docpath=TEST_ROOT / 'markup.txt',
-        lineno=443,
     ),
 }
 
