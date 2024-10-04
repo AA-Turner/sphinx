@@ -120,6 +120,7 @@ jobs:
       uses: deadsnakes/action@v3.2.0
       with:
         python-version: ${{ matrix.python }}
+        debug: true
         nogil: true
     - name: Check Python version
       run: python --version --version
