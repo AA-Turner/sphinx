@@ -45,7 +45,7 @@ def test_build_all():
 
         # invoke threads
         num_workers = 2
-        for _i in range(num_workers):
+        for _ in range(num_workers):
             thread = HyperlinkAvailabilityCheckWorker(rqueue, wqueue)
             thread.start()
             workers.append(thread)
