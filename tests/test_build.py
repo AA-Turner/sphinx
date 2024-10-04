@@ -32,22 +32,13 @@ QUEUE_POLL_SECS = 1
 DEFAULT_DELAY = 60.0
 
 
-class Hyperlink(NamedTuple):
-    uri: str
-    docname: str
-    docpath: Path
-    lineno: int
-
-
 class CheckRequest(NamedTuple):
     next_check: float
-    hyperlink: Hyperlink | None
+    hyperlink: str | None
 
 
 class CheckResult(NamedTuple):
     uri: str
-    docname: str
-    lineno: int
     status: str
     message: str
     code: int
@@ -59,44 +50,14 @@ class RateLimit(NamedTuple):
 
 
 TEST_ROOT = Path(__file__).parent.resolve() / 'test-root'
-HYPERLINKS = {
-    'https://bugs.python.org/issue1000': Hyperlink(
-        uri='https://bugs.python.org/issue1000',
-        docname='extensions',
-        docpath=TEST_ROOT / 'extensions.txt',
-        lineno=7,
-    ),
-    'https://python.org/dev/': Hyperlink(
-        uri='https://python.org/dev/',
-        docname='extensions',
-        docpath=TEST_ROOT / 'extensions.txt',
-        lineno=7,
-    ),
-    'https://bugs.python.org/issue1042': Hyperlink(
-        uri='https://bugs.python.org/issue1042',
-        docname='extensions',
-        docpath=TEST_ROOT / 'extensions.txt',
-        lineno=7,
-    ),
-    'https://peps.python.org/pep-0008/': Hyperlink(
-        uri='https://peps.python.org/pep-0008/',
-        docname='markup',
-        docpath=TEST_ROOT / 'markup.txt',
-        lineno=142,
-    ),
-    'https://datatracker.ietf.org/doc/html/rfc1.html': Hyperlink(
-        uri='https://datatracker.ietf.org/doc/html/rfc1.html',
-        docname='markup',
-        docpath=TEST_ROOT / 'markup.txt',
-        lineno=144,
-    ),
-    'https://www.google.com': Hyperlink(
-        uri='https://www.google.com',
-        docname='markup',
-        docpath=TEST_ROOT / 'markup.txt',
-        lineno=327,
-    ),
-}
+HYPERLINKS = [
+    'https://bugs.python.org/issue1000',
+    'https://python.org/dev/',
+    'https://bugs.python.org/issue1042',
+    'https://peps.python.org/pep-0008/',
+    'https://datatracker.ietf.org/doc/html/rfc1.html',
+    'https://www.google.com',
+]
 
 
 class HyperlinkAvailabilityCheckWorker(Thread):
@@ -116,14 +77,10 @@ class HyperlinkAvailabilityCheckWorker(Thread):
 
     def run(self) -> None:
         while True:
-            next_check, hyperlink = self.wqueue.get()
-            if hyperlink is None:
+            next_check, uri = self.wqueue.get()
+            if uri is None:
                 # An empty hyperlink is a signal to shutdown the worker; cleanup resources here
                 self._session.close()
-                break
-
-            uri, docname, _docpath, lineno = hyperlink
-            if uri is None:
                 break
 
             netloc = urlsplit(uri).netloc
@@ -137,16 +94,14 @@ class HyperlinkAvailabilityCheckWorker(Thread):
                 # Sleep before putting message back in the queue to avoid
                 # waking up other threads.
                 time.sleep(QUEUE_POLL_SECS)
-                self.wqueue.put(CheckRequest(next_check, hyperlink), False)
+                self.wqueue.put(CheckRequest(next_check, uri), False)
                 self.wqueue.task_done()
                 continue
-            status, info, code = self._check(docname, uri, hyperlink)
-            self.rqueue.put(CheckResult(uri, docname, lineno, status, info, code))
+            status, info, code = self._check(uri)
+            self.rqueue.put(CheckResult(uri, status, info, code))
             self.wqueue.task_done()
 
-    def _check(
-        self, docname: str, uri: str, hyperlink: Hyperlink
-    ) -> tuple[str, str, int]:
+    def _check(self, uri: str) -> tuple[str, str, int]:
         # check for various conditions without bothering the network
 
         if len(uri) == 0 or uri.startswith(('#', 'mailto:', 'tel:')):
@@ -156,13 +111,10 @@ class HyperlinkAvailabilityCheckWorker(Thread):
                 # Non-supported URI schemes (ex. ftp)
                 return 'unchecked', '', 0
 
-            src_dir = path.dirname(hyperlink.docpath)
-            if path.exists(path.join(src_dir, uri)):
-                return 'working', '', 0
             return 'broken', '', 0
 
         # need to actually check the URI
-        status, info, code = self._check_uri(uri, hyperlink)
+        status, info, code = self._check_uri(uri)
         return status, info, code
 
     def _retrieval_methods(
@@ -174,7 +126,7 @@ class HyperlinkAvailabilityCheckWorker(Thread):
             yield self._session.head, {'allow_redirects': True}
         yield self._session.get, {'stream': True}
 
-    def _check_uri(self, uri: str, hyperlink: Hyperlink) -> tuple[str, str, int]:
+    def _check_uri(self, uri: str) -> tuple[str, str, int]:
         req_url, delimiter, anchor = uri.partition('#')
         if delimiter and anchor:
             if re.match(r'^!', anchor):
@@ -302,7 +254,7 @@ def test_build_all(requests_head):
 
         # check
         total_links = 0
-        for hyperlink in HYPERLINKS.values():
+        for hyperlink in HYPERLINKS:
             wqueue.put(CheckRequest(CHECK_IMMEDIATELY, hyperlink), False)
             total_links += 1
 
