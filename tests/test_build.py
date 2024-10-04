@@ -22,7 +22,6 @@ class HyperlinkAvailabilityCheckWorker(threading.Thread):
                 'HEAD',
                 url=uri,
                 timeout=30,
-                verify=True,
             )
             self.rqueue.put(uri)
             self.wqueue.task_done()
