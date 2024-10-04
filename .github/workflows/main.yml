@@ -63,7 +63,7 @@ jobs:
         sudo chmod 777 /cores
         sudo bash -c 'echo "/cores/%e.%p.%t" > /proc/sys/kernel/core_pattern'
         ulimit -c unlimited
-        python -m pytest -vv --durations 25
+        python -m pytest --capture=tee-sys -vv --durations 25
       env:
         PYTHONWARNINGS: "error"  # treat all warnings as errors
 

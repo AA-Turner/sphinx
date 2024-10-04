@@ -13,9 +13,8 @@ from urllib.parse import unquote, urlsplit
 from unittest import mock
 
 from requests.exceptions import ConnectionError, HTTPError, SSLError, TooManyRedirects
-from requests.exceptions import Timeout as RequestTimeout
+from requests.exceptions import Timeout
 
-# from sphinx.builders.linkcheck import Hyperlink, HyperlinkAvailabilityChecker
 from sphinx.util import requests
 
 if TYPE_CHECKING:
@@ -313,7 +312,7 @@ class HyperlinkAvailabilityCheckWorker(Thread):
                 del response
                 break
 
-            except RequestTimeout as err:
+            except Timeout as err:
                 return self._timeout_status, str(err), 0
 
             except SSLError as err:
