@@ -2,22 +2,10 @@ name: CI
 
 on:
   push:
-    paths:
-      - ".github/workflows/main.yml"
-      - "sphinx/**"
-      - "tests/**"
   pull_request:
-    paths:
-      - ".github/workflows/main.yml"
-      - "sphinx/**"
-      - "tests/**"
 
 permissions:
   contents: read
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
-  cancel-in-progress: true
 
 env:
   FORCE_COLOR: "1"
@@ -28,22 +16,13 @@ env:
 jobs:
   deadsnakes-free-threraded:
     runs-on: ubuntu-latest
-    name: Python ${{ matrix.python }} (Docutils ${{ matrix.docutils }}; free-threaded)
-    strategy:
-      fail-fast: false
-      matrix:
-        python:
-        - "3.13-dev"
-        docutils:
-        - "0.20"
-        - "0.21"
-
+    name: Python 3.13-dev (free-threaded)
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python }} (deadsnakes)
+    - name: Set up Python 3.13-dev (deadsnakes)
       uses: deadsnakes/action@v3.2.0
       with:
-        python-version: ${{ matrix.python }}
+        python-version: "3.13-dev"
         nogil: true
     - name: Check Python version
       run: python --version --version
@@ -51,8 +30,6 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install .[test]
-    - name: Install Docutils ${{ matrix.docutils }}
-      run: python -m pip install --upgrade "docutils~=${{ matrix.docutils }}.0"
     # markupsafe._speedups has not declared that it can run safely without the GIL
     - name: Remove markupsafe._speedups
       run: rm -rf "$(python -c 'from markupsafe._speedups import __file__ as f; print(f)')"
@@ -63,22 +40,13 @@ jobs:
 
   deadsnakes-free-threraded-core-dumps:
     runs-on: ubuntu-latest
-    name: Python ${{ matrix.python }} (Docutils ${{ matrix.docutils }}; core-dump)
-    strategy:
-      fail-fast: false
-      matrix:
-        python:
-        - "3.13-dev"
-        docutils:
-        - "0.20"
-        - "0.21"
-
+    name: Python 3.13-dev (core-dump)
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python }} (deadsnakes)
+    - name: Set up Python 3.13-dev (deadsnakes)
       uses: deadsnakes/action@v3.2.0
       with:
-        python-version: ${{ matrix.python }}
+        python-version: "3.13-dev"
         nogil: true
     - name: Check Python version
       run: python --version --version
@@ -86,8 +54,6 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install .[test]
-    - name: Install Docutils ${{ matrix.docutils }}
-      run: python -m pip install --upgrade "docutils~=${{ matrix.docutils }}.0"
     # markupsafe._speedups has not declared that it can run safely without the GIL
     - name: Remove markupsafe._speedups
       run: rm -rf "$(python -c 'from markupsafe._speedups import __file__ as f; print(f)')"
