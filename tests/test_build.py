@@ -7,7 +7,6 @@ from os import path
 from queue import PriorityQueue, Queue
 from pathlib import Path
 from threading import Thread
-from types import SimpleNamespace
 from typing import TYPE_CHECKING, NamedTuple
 from urllib.parse import unquote, urlsplit
 from unittest import mock
@@ -101,13 +100,11 @@ HYPERLINKS = {
 
 
 class HyperlinkAvailabilityChecker:
-    def __init__(self, config) -> None:
-        self.config = config
+    def __init__(self) -> None:
         self.rate_limits: dict[str, RateLimit] = {}
         self.rqueue: Queue[CheckResult] = Queue()
         self.workers: list[Thread] = []
         self.wqueue: PriorityQueue[CheckRequest] = PriorityQueue()
-        self.num_workers: int = 5
 
     def check(self, hyperlinks: dict[str, Hyperlink]) -> Iterator[CheckResult]:
         self.invoke_threads()
@@ -125,9 +122,10 @@ class HyperlinkAvailabilityChecker:
         self.shutdown_threads()
 
     def invoke_threads(self) -> None:
-        for _i in range(self.num_workers):
+        num_workers = 5
+        for _i in range(num_workers):
             thread = HyperlinkAvailabilityCheckWorker(
-                self.config, self.rqueue, self.wqueue, self.rate_limits
+                self.rqueue, self.wqueue, self.rate_limits
             )
             thread.start()
             self.workers.append(thread)
@@ -143,7 +141,6 @@ class HyperlinkAvailabilityCheckWorker(Thread):
 
     def __init__(
         self,
-        config,
         rqueue: Queue[CheckResult],
         wqueue: Queue[CheckRequest],
         rate_limits: dict[str, RateLimit],
@@ -151,42 +148,7 @@ class HyperlinkAvailabilityCheckWorker(Thread):
         self.rate_limits = rate_limits
         self.rqueue = rqueue
         self.wqueue = wqueue
-
-        self.anchors_ignore: list[re.Pattern[str]] = list(
-            map(re.compile, config.linkcheck_anchors_ignore)
-        )
-        self.anchors_ignore_for_url: list[re.Pattern[str]] = list(
-            map(re.compile, config.linkcheck_anchors_ignore_for_url)
-        )
-        self.documents_exclude: list[re.Pattern[str]] = list(
-            map(re.compile, config.linkcheck_exclude_documents)
-        )
-        self.auth = [
-            (re.compile(pattern), auth_info)
-            for pattern, auth_info in config.linkcheck_auth
-        ]
-
-        self.timeout: int | float | None = config.linkcheck_timeout
-        self.request_headers: dict[str, dict[str, str]] = (
-            config.linkcheck_request_headers
-        )
-        self.check_anchors: bool = config.linkcheck_anchors
-        self.allowed_redirects: dict[re.Pattern[str], re.Pattern[str]]
-        self.allowed_redirects = config.linkcheck_allowed_redirects
-        self.retries: int = config.linkcheck_retries
-        self.rate_limit_timeout = config.linkcheck_rate_limit_timeout
-        self._allow_unauthorized = config.linkcheck_allow_unauthorized
-        if config.linkcheck_report_timeouts_as_broken:
-            self._timeout_status = 'broken'
-        else:
-            self._timeout_status = 'timeout'
-
-        self.user_agent = config.user_agent
-        self.tls_verify = config.tls_verify
-        self.tls_cacerts = config.tls_cacerts
-
         self._session = requests._Session()
-
         super().__init__(daemon=True)
 
     def run(self) -> None:
@@ -224,14 +186,6 @@ class HyperlinkAvailabilityCheckWorker(Thread):
     ) -> tuple[str, str, int]:
         # check for various conditions without bothering the network
 
-        for doc_matcher in self.documents_exclude:
-            if doc_matcher.match(docname):
-                info = (
-                    f'{docname} matched {doc_matcher.pattern} from '
-                    'linkcheck_exclude_documents'
-                )
-                return 'ignored', info, 0
-
         if len(uri) == 0 or uri.startswith(('#', 'mailto:', 'tel:')):
             return 'unchecked', '', 0
         if not uri.startswith(('http:', 'https:')):
@@ -245,12 +199,7 @@ class HyperlinkAvailabilityCheckWorker(Thread):
             return 'broken', '', 0
 
         # need to actually check the URI
-        status, info, code = '', '', 0
-        for _ in range(self.retries):
-            status, info, code = self._check_uri(uri, hyperlink)
-            if status != 'broken':
-                break
-
+        status, info, code = self._check_uri(uri, hyperlink)
         return status, info, code
 
     def _retrieval_methods(
@@ -265,44 +214,31 @@ class HyperlinkAvailabilityCheckWorker(Thread):
     def _check_uri(self, uri: str, hyperlink: Hyperlink) -> tuple[str, str, int]:
         req_url, delimiter, anchor = uri.partition('#')
         if delimiter and anchor:
-            for rex in self.anchors_ignore:
-                if rex.match(anchor):
-                    anchor = ''
-                    break
+            if re.match(r'^!', anchor):
+                anchor = ''
             else:
-                for rex in self.anchors_ignore_for_url:
-                    if rex.match(req_url):
-                        anchor = ''
-                        break
-            anchor = unquote(anchor)
+                anchor = unquote(anchor)
 
         # handle non-ASCII URIs
         req_url.encode('ascii')
 
-        # Get auth info, if any
-        for pattern, auth_info in self.auth:  # NoQA: B007 (false positive)
-            if pattern.match(uri):
-                break
-        else:
-            auth_info = None
+        auth_info = None
 
         # update request headers for the URL
-        headers = _get_request_headers(uri, self.request_headers)
+        headers = _get_request_headers(uri, {})
 
         error_message = ''
         status_code = -1
-        for retrieval_method, kwargs in self._retrieval_methods(
-            self.check_anchors, anchor
-        ):
+        for retrieval_method, kwargs in self._retrieval_methods(True, anchor):
             try:
                 response = retrieval_method(
                     url=req_url,
                     auth=auth_info,
                     headers=headers,
-                    timeout=self.timeout,
+                    timeout=30,
                     **kwargs,
-                    _user_agent=self.user_agent,
-                    _tls_info=(self.tls_verify, self.tls_cacerts),
+                    _user_agent=None,
+                    _tls_info=(True, None),
                 )
                 # Copy data we need from the (closed) response
                 status_code = response.status_code
@@ -316,7 +252,7 @@ class HyperlinkAvailabilityCheckWorker(Thread):
                 break
 
             except Timeout as err:
-                return self._timeout_status, str(err), 0
+                return 'timeout', str(err), 0
 
             except SSLError as err:
                 # SSL failure; report that the link is broken.
@@ -385,27 +321,8 @@ def request_session_head(url, **kwargs):
     side_effect=request_session_head,
 )
 def test_build_all(requests_head):
-    config = SimpleNamespace(
-        tls_verify=True,
-        tls_cacerts=None,
-        user_agent=None,
-        linkcheck_ignore=[],
-        linkcheck_exclude_documents=[],
-        linkcheck_allowed_redirects={},
-        linkcheck_auth=[],
-        linkcheck_request_headers={},
-        linkcheck_retries=1,
-        linkcheck_timeout=30,
-        linkcheck_workers=5,
-        linkcheck_anchors=True,
-        linkcheck_anchors_ignore=['^!'],
-        linkcheck_anchors_ignore_for_url=(),
-        linkcheck_rate_limit_timeout=300.0,
-        linkcheck_allow_unauthorized=False,
-        linkcheck_report_timeouts_as_broken=False,
-    )
     for i in range(1_000):
         print(f'loop: {i}')
-        checker = HyperlinkAvailabilityChecker(config)
+        checker = HyperlinkAvailabilityChecker()
         for result in checker.check(HYPERLINKS):
             print(result)
