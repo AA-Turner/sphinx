@@ -56,7 +56,7 @@ nonascii file name page
     'sphinx.builders.linkcheck.requests.head',
     side_effect=request_session_head,
 )
-def test_build_all(requests_head, make_app, nonascii_srcdir, buildername):
+def test_build_all(requests_head, make_app, nonascii_srcdir):
     for _ in range(1_000):
         app = make_app('linkcheck', srcdir=nonascii_srcdir)
         app.build()
