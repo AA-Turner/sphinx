@@ -99,43 +99,6 @@ HYPERLINKS = {
 }
 
 
-class HyperlinkAvailabilityChecker:
-    def __init__(self) -> None:
-        self.rate_limits: dict[str, RateLimit] = {}
-        self.rqueue: Queue[CheckResult] = Queue()
-        self.workers: list[Thread] = []
-        self.wqueue: PriorityQueue[CheckRequest] = PriorityQueue()
-
-    def check(self, hyperlinks: dict[str, Hyperlink]) -> Iterator[CheckResult]:
-        self.invoke_threads()
-
-        total_links = 0
-        for hyperlink in hyperlinks.values():
-            self.wqueue.put(CheckRequest(CHECK_IMMEDIATELY, hyperlink), False)
-            total_links += 1
-
-        done = 0
-        while done < total_links:
-            yield self.rqueue.get()
-            done += 1
-
-        self.shutdown_threads()
-
-    def invoke_threads(self) -> None:
-        num_workers = 5
-        for _i in range(num_workers):
-            thread = HyperlinkAvailabilityCheckWorker(
-                self.rqueue, self.wqueue, self.rate_limits
-            )
-            thread.start()
-            self.workers.append(thread)
-
-    def shutdown_threads(self) -> None:
-        self.wqueue.join()
-        for _worker in self.workers:
-            self.wqueue.put(CheckRequest(CHECK_IMMEDIATELY, None), False)
-
-
 class HyperlinkAvailabilityCheckWorker(Thread):
     """A worker class for checking the availability of hyperlinks."""
 
@@ -323,6 +286,33 @@ def request_session_head(url, **kwargs):
 def test_build_all(requests_head):
     for i in range(1_000):
         print(f'loop: {i}')
-        checker = HyperlinkAvailabilityChecker()
-        for result in checker.check(HYPERLINKS):
+
+        # setup
+        rate_limits: dict[str, RateLimit] = {}
+        rqueue: Queue[CheckResult] = Queue()
+        workers: list[Thread] = []
+        wqueue: PriorityQueue[CheckRequest] = PriorityQueue()
+
+        # invoke threads
+        num_workers = 5
+        for _i in range(num_workers):
+            thread = HyperlinkAvailabilityCheckWorker(rqueue, wqueue, rate_limits)
+            thread.start()
+            workers.append(thread)
+
+        # check
+        total_links = 0
+        for hyperlink in HYPERLINKS.values():
+            wqueue.put(CheckRequest(CHECK_IMMEDIATELY, hyperlink), False)
+            total_links += 1
+
+        done = 0
+        while done < total_links:
+            result = rqueue.get()
             print(result)
+            done += 1
+
+        # shutdown_threads
+        wqueue.join()
+        for _worker in workers:
+            wqueue.put(CheckRequest(CHECK_IMMEDIATELY, None), False)
