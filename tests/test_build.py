@@ -1,33 +1,12 @@
-from __future__ import annotations
-
-from collections import namedtuple
 from queue import Queue
-from pathlib import Path
 from threading import Thread
 from unittest import mock
 
 from sphinx.util import requests
 
-CHECK_IMMEDIATELY = 0
-QUEUE_POLL_SECS = 1
-CheckResult = namedtuple('CheckResult', ['uri', 'status', 'message', 'code'])
-
-
-TEST_ROOT = Path(__file__).parent.resolve() / 'test-root'
-HYPERLINKS = [
-    'https://bugs.python.org/issue1000',
-    'https://python.org/dev/',
-    'https://bugs.python.org/issue1042',
-    'https://peps.python.org/pep-0008/',
-    'https://datatracker.ietf.org/doc/html/rfc1.html',
-    'https://www.google.com',
-]
-
 
 class HyperlinkAvailabilityCheckWorker(Thread):
-    """A worker class for checking the availability of hyperlinks."""
-
-    def __init__(self, rqueue: Queue[CheckResult], wqueue: Queue[str | None]) -> None:
+    def __init__(self, rqueue: Queue[str], wqueue: Queue[str | None]) -> None:
         self.rqueue = rqueue
         self.wqueue = wqueue
         self._session = requests._Session()
@@ -56,7 +35,7 @@ class HyperlinkAvailabilityCheckWorker(Thread):
                 del response
             except Exception:
                 pass
-            self.rqueue.put(CheckResult(uri, '', '', 0))
+            self.rqueue.put(uri)
             self.wqueue.task_done()
 
 
@@ -76,7 +55,7 @@ def test_build_all(requests_head):
         print(f'loop: {i}')
 
         # setup
-        rqueue: Queue[CheckResult] = Queue()
+        rqueue: Queue[str] = Queue()
         workers: list[HyperlinkAvailabilityCheckWorker] = []
         wqueue: Queue[str | None] = Queue()
 
@@ -89,7 +68,14 @@ def test_build_all(requests_head):
 
         # check
         total_links = 0
-        for hyperlink in HYPERLINKS:
+        for hyperlink in (
+            'https://bugs.python.org/issue1000',
+            'https://python.org/dev/',
+            'https://bugs.python.org/issue1042',
+            'https://peps.python.org/pep-0008/',
+            'https://datatracker.ietf.org/doc/html/rfc1.html',
+            'https://www.google.com',
+        ):
             wqueue.put(hyperlink, False)
             total_links += 1
 
