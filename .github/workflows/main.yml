@@ -60,14 +60,15 @@ jobs:
       run: rm -rf "$(python -c 'from markupsafe._speedups import __file__ as f; print(f)')"
     - name: Test with pytest
       run: |
-        mkdir /cores
-        ulimit -c unlimited
+        sudo mkdir -p /cores
+        sudo ulimit -c unlimited
         python -m pytest -vv --durations 25
-        chmod -R +rwx /cores/*
+        sudo chmod -R +rwx /cores
       env:
         PYTHONWARNINGS: "error"  # treat all warnings as errors
 
     - uses: actions/upload-artifact@master
+      if: always()
       with:
         name: crashes
         path: /cores
