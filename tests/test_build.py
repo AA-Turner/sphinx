@@ -22,7 +22,8 @@ if TYPE_CHECKING:
 
     from requests import Response
 
-uri_re = re.compile('([a-z]+:)?//')  # matches to foo:// and // (a protocol relative URL)
+# matches to foo:// and // (a protocol relative URL)
+uri_re = re.compile('([a-z]+:)?//')
 
 DEFAULT_REQUEST_HEADERS = {
     'Accept': 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.8',
@@ -30,6 +31,7 @@ DEFAULT_REQUEST_HEADERS = {
 CHECK_IMMEDIATELY = 0
 QUEUE_POLL_SECS = 1
 DEFAULT_DELAY = 60.0
+
 
 class Hyperlink(NamedTuple):
     uri: str
@@ -105,22 +107,15 @@ class HyperlinkAvailabilityChecker:
         self.rqueue: Queue[CheckResult] = Queue()
         self.workers: list[Thread] = []
         self.wqueue: PriorityQueue[CheckRequest] = PriorityQueue()
-        self.num_workers: int = config.linkcheck_workers
-
-        self.to_ignore: list[re.Pattern[str]] = list(map(re.compile,
-                                                         self.config.linkcheck_ignore))
+        self.num_workers: int = 5
 
     def check(self, hyperlinks: dict[str, Hyperlink]) -> Iterator[CheckResult]:
         self.invoke_threads()
 
         total_links = 0
         for hyperlink in hyperlinks.values():
-            if self.is_ignored_uri(hyperlink.uri):
-                yield CheckResult(hyperlink.uri, hyperlink.docname, hyperlink.lineno,
-                                  'ignored', '', 0)
-            else:
-                self.wqueue.put(CheckRequest(CHECK_IMMEDIATELY, hyperlink), False)
-                total_links += 1
+            self.wqueue.put(CheckRequest(CHECK_IMMEDIATELY, hyperlink), False)
+            total_links += 1
 
         done = 0
         while done < total_links:
@@ -131,9 +126,9 @@ class HyperlinkAvailabilityChecker:
 
     def invoke_threads(self) -> None:
         for _i in range(self.num_workers):
-            thread = HyperlinkAvailabilityCheckWorker(self.config,
-                                                      self.rqueue, self.wqueue,
-                                                      self.rate_limits)
+            thread = HyperlinkAvailabilityCheckWorker(
+                self.config, self.rqueue, self.wqueue, self.rate_limits
+            )
             thread.start()
             self.workers.append(thread)
 
@@ -142,32 +137,39 @@ class HyperlinkAvailabilityChecker:
         for _worker in self.workers:
             self.wqueue.put(CheckRequest(CHECK_IMMEDIATELY, None), False)
 
-    def is_ignored_uri(self, uri: str) -> bool:
-        return any(pat.match(uri) for pat in self.to_ignore)
-
 
 class HyperlinkAvailabilityCheckWorker(Thread):
     """A worker class for checking the availability of hyperlinks."""
 
-    def __init__(self, config,
-                 rqueue: Queue[CheckResult],
-                 wqueue: Queue[CheckRequest],
-                 rate_limits: dict[str, RateLimit]) -> None:
+    def __init__(
+        self,
+        config,
+        rqueue: Queue[CheckResult],
+        wqueue: Queue[CheckRequest],
+        rate_limits: dict[str, RateLimit],
+    ) -> None:
         self.rate_limits = rate_limits
         self.rqueue = rqueue
         self.wqueue = wqueue
 
         self.anchors_ignore: list[re.Pattern[str]] = list(
-            map(re.compile, config.linkcheck_anchors_ignore))
+            map(re.compile, config.linkcheck_anchors_ignore)
+        )
         self.anchors_ignore_for_url: list[re.Pattern[str]] = list(
-            map(re.compile, config.linkcheck_anchors_ignore_for_url))
+            map(re.compile, config.linkcheck_anchors_ignore_for_url)
+        )
         self.documents_exclude: list[re.Pattern[str]] = list(
-            map(re.compile, config.linkcheck_exclude_documents))
-        self.auth = [(re.compile(pattern), auth_info) for pattern, auth_info
-                     in config.linkcheck_auth]
+            map(re.compile, config.linkcheck_exclude_documents)
+        )
+        self.auth = [
+            (re.compile(pattern), auth_info)
+            for pattern, auth_info in config.linkcheck_auth
+        ]
 
         self.timeout: int | float | None = config.linkcheck_timeout
-        self.request_headers: dict[str, dict[str, str]] = config.linkcheck_request_headers
+        self.request_headers: dict[str, dict[str, str]] = (
+            config.linkcheck_request_headers
+        )
         self.check_anchors: bool = config.linkcheck_anchors
         self.allowed_redirects: dict[re.Pattern[str], re.Pattern[str]]
         self.allowed_redirects = config.linkcheck_allowed_redirects
@@ -217,7 +219,9 @@ class HyperlinkAvailabilityCheckWorker(Thread):
             self.rqueue.put(CheckResult(uri, docname, lineno, status, info, code))
             self.wqueue.task_done()
 
-    def _check(self, docname: str, uri: str, hyperlink: Hyperlink) -> tuple[str, str, int]:
+    def _check(
+        self, docname: str, uri: str, hyperlink: Hyperlink
+    ) -> tuple[str, str, int]:
         # check for various conditions without bothering the network
 
         for doc_matcher in self.documents_exclude:
@@ -285,18 +289,15 @@ class HyperlinkAvailabilityCheckWorker(Thread):
         # update request headers for the URL
         headers = _get_request_headers(uri, self.request_headers)
 
-        # Linkcheck HTTP request logic:
-        #
-        # - Attempt HTTP HEAD before HTTP GET unless page content is required.
-        # - Follow server-issued HTTP redirects.
-        # - Respect server-issued HTTP 429 back-offs.
         error_message = ''
         status_code = -1
-        response_url = retry_after = ''
-        for retrieval_method, kwargs in self._retrieval_methods(self.check_anchors, anchor):
+        for retrieval_method, kwargs in self._retrieval_methods(
+            self.check_anchors, anchor
+        ):
             try:
                 response = retrieval_method(
-                    url=req_url, auth=auth_info,
+                    url=req_url,
+                    auth=auth_info,
                     headers=headers,
                     timeout=self.timeout,
                     **kwargs,
@@ -305,7 +306,9 @@ class HyperlinkAvailabilityCheckWorker(Thread):
                 )
                 # Copy data we need from the (closed) response
                 status_code = response.status_code
-                redirect_status_code = response.history[-1].status_code if response.history else None  # NoQA: E501
+                redirect_status_code = (
+                    response.history[-1].status_code if response.history else None
+                )  # NoQA: E501
                 retry_after = response.headers.get('Retry-After', '')
                 response_url = f'{response.url}'
                 response.raise_for_status()
@@ -326,22 +329,8 @@ class HyperlinkAvailabilityCheckWorker(Thread):
                 continue
 
             except HTTPError as err:
-                error_message = str(err)
-
-                # Unauthorized: the client did not provide required credentials
-                if status_code == 401:
-                    status = 'working' if self._allow_unauthorized else 'broken'
-                    return status, 'unauthorized', 0
-
-                # Rate limiting; back-off if allowed, or report failure otherwise
-                if status_code == 429:
-                    return 'broken', error_message, 0
-
-                # Don't claim success/failure during server-side outages
-                if status_code == 503:
-                    return 'ignored', 'service unavailable', 0
-
-                # For most HTTP failures, continue attempting alternate retrieval methods
+                if status_code in {401, 429, 503}:
+                    return 'broken', str(err), 0
                 continue
 
             except Exception as err:
@@ -371,10 +360,12 @@ def _get_request_headers(
     request_headers: dict[str, dict[str, str]],
 ) -> dict[str, str]:
     url = urlsplit(uri)
-    candidates = (f'{url.scheme}://{url.netloc}',
-                  f'{url.scheme}://{url.netloc}/',
-                  uri,
-                  '*')
+    candidates = (
+        f'{url.scheme}://{url.netloc}',
+        f'{url.scheme}://{url.netloc}/',
+        uri,
+        '*',
+    )
 
     for u in candidates:
         if u in request_headers:
