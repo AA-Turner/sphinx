@@ -1,35 +1,18 @@
 from __future__ import annotations
 
 import contextlib
-import re
 import time
-from os import path
 from queue import PriorityQueue, Queue
 from pathlib import Path
 from threading import Thread
-from typing import TYPE_CHECKING, NamedTuple
-from urllib.parse import unquote, urlsplit
+from typing import NamedTuple
+from urllib.parse import urlsplit
 from unittest import mock
-
-from requests.exceptions import ConnectionError, HTTPError, SSLError, TooManyRedirects
-from requests.exceptions import Timeout
 
 from sphinx.util import requests
 
-if TYPE_CHECKING:
-    from collections.abc import Callable, Iterator
-
-    from requests import Response
-
-# matches to foo:// and // (a protocol relative URL)
-uri_re = re.compile('([a-z]+:)?//')
-
-DEFAULT_REQUEST_HEADERS = {
-    'Accept': 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.8',
-}
 CHECK_IMMEDIATELY = 0
 QUEUE_POLL_SECS = 1
-DEFAULT_DELAY = 60.0
 
 
 class CheckRequest(NamedTuple):
@@ -97,66 +80,27 @@ class HyperlinkAvailabilityCheckWorker(Thread):
                 self.wqueue.put(CheckRequest(next_check, uri), False)
                 self.wqueue.task_done()
                 continue
-            status, info, code = self._check(uri)
+            status, info, code = self._check_uri(uri)
             self.rqueue.put(CheckResult(uri, status, info, code))
             self.wqueue.task_done()
 
-    def _check(self, uri: str) -> tuple[str, str, int]:
-        # check for various conditions without bothering the network
-
-        if len(uri) == 0 or uri.startswith(('#', 'mailto:', 'tel:')):
-            return 'unchecked', '', 0
-        if not uri.startswith(('http:', 'https:')):
-            if uri_re.match(uri):
-                # Non-supported URI schemes (ex. ftp)
-                return 'unchecked', '', 0
-
-            return 'broken', '', 0
-
-        # need to actually check the URI
-        status, info, code = self._check_uri(uri)
-        return status, info, code
-
-    def _retrieval_methods(
-        self,
-        check_anchors: bool,
-        anchor: str,
-    ) -> Iterator[tuple[Callable[..., Response], dict[str, bool]]]:
-        if not check_anchors or not anchor:
-            yield self._session.head, {'allow_redirects': True}
-        yield self._session.get, {'stream': True}
-
-    def _check_uri(self, uri: str) -> tuple[str, str, int]:
-        req_url, delimiter, anchor = uri.partition('#')
-        if delimiter and anchor:
-            if re.match(r'^!', anchor):
-                anchor = ''
-            else:
-                anchor = unquote(anchor)
-
-        # handle non-ASCII URIs
-        req_url.encode('ascii')
-
-        auth_info = None
-
-        # update request headers for the URL
-        headers = _get_request_headers(uri, {})
-
+    def _check_uri(self, req_url: str) -> tuple[str, str, int]:
         error_message = ''
-        status_code = -1
-        for retrieval_method, kwargs in self._retrieval_methods(True, anchor):
+        for retrieval_method, kwargs in [
+            (self._session.head, {'allow_redirects': True}),
+            (self._session.get, {'stream': True}),
+        ]:
             try:
                 response = retrieval_method(
                     url=req_url,
-                    auth=auth_info,
-                    headers=headers,
+                    auth=None,
+                    headers={},
                     timeout=30,
                     **kwargs,
                     _user_agent=None,
                     _tls_info=(True, None),
                 )
                 # Copy data we need from the (closed) response
-                status_code = response.status_code
                 redirect_status_code = (
                     response.history[-1].status_code if response.history else None
                 )  # NoQA: E501
@@ -165,30 +109,10 @@ class HyperlinkAvailabilityCheckWorker(Thread):
                 response.raise_for_status()
                 del response
                 break
-
-            except Timeout as err:
-                return 'timeout', str(err), 0
-
-            except SSLError as err:
-                # SSL failure; report that the link is broken.
-                return 'broken', str(err), 0
-
-            except (ConnectionError, TooManyRedirects) as err:
-                # Servers drop the connection on HEAD requests, causing
-                # ConnectionError.
-                error_message = str(err)
-                continue
-
-            except HTTPError as err:
-                if status_code in {401, 429, 503}:
-                    return 'broken', str(err), 0
-                continue
-
             except Exception as err:
                 # Unhandled exception (intermittent or permanent); report that
                 # the link is broken.
                 return 'broken', str(err), 0
-
         else:
             # All available retrieval methods have been exhausted; report
             # that the link is broken.
@@ -204,24 +128,6 @@ class HyperlinkAvailabilityCheckWorker(Thread):
             return 'redirected', response_url, redirect_status_code
         else:
             return 'redirected', response_url, 0
-
-
-def _get_request_headers(
-    uri: str,
-    request_headers: dict[str, dict[str, str]],
-) -> dict[str, str]:
-    url = urlsplit(uri)
-    candidates = (
-        f'{url.scheme}://{url.netloc}',
-        f'{url.scheme}://{url.netloc}/',
-        uri,
-        '*',
-    )
-
-    for u in candidates:
-        if u in request_headers:
-            return {**DEFAULT_REQUEST_HEADERS, **request_headers[u]}
-    return {}
 
 
 def request_session_head(url, **kwargs):
@@ -242,7 +148,7 @@ def test_build_all(requests_head):
         # setup
         rate_limits: dict[str, RateLimit] = {}
         rqueue: Queue[CheckResult] = Queue()
-        workers: list[Thread] = []
+        workers: list[HyperlinkAvailabilityCheckWorker] = []
         wqueue: PriorityQueue[CheckRequest] = PriorityQueue()
 
         # invoke threads
