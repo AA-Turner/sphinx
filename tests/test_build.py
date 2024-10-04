@@ -17,7 +17,7 @@ def request_session_head(url, **kwargs):
     side_effect=request_session_head,
 )
 def test_build_all(requests_head, tmp_path):
-    test_root = Path(__file__).parent.resolve() / 'roots' / 'test-root'
+    test_root = Path(__file__).parent.resolve() / 'test-root'
     shutil.copytree(test_root, tmp_path, dirs_exist_ok=True)
     app = SphinxTestApp('linkcheck', srcdir=tmp_path)
     for _ in range(1_000):

@@ -12,7 +12,7 @@ import sphinx.pycode
 pytest_plugins = ['sphinx.testing.fixtures']
 
 # Exclude 'roots' dirs for pytest test collector
-collect_ignore = ['roots']
+collect_ignore = ['test-root']
 
 
 def pytest_report_header(config: pytest.Config) -> str:
