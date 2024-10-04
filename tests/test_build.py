@@ -1,6 +1,5 @@
 from queue import Queue
 from threading import Thread
-from unittest import mock
 
 from sphinx.util import requests
 
@@ -30,7 +29,6 @@ class HyperlinkAvailabilityCheckWorker(Thread):
                     _user_agent=None,
                     _tls_info=(True, None),
                 )
-                # Copy data we need from the (closed) response
                 response.raise_for_status()
                 del response
             except Exception:
@@ -39,18 +37,7 @@ class HyperlinkAvailabilityCheckWorker(Thread):
             self.wqueue.task_done()
 
 
-def request_session_head(url, **kwargs):
-    response = mock.Mock()
-    response.status_code = 200
-    response.url = url
-    return response
-
-
-@mock.patch(
-    'sphinx.util.requests.head',
-    side_effect=request_session_head,
-)
-def test_build_all(requests_head):
+def test_build_all():
     for i in range(1_000):
         print(f'loop: {i}')
 
