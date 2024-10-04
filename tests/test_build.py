@@ -1,24 +1,24 @@
 import queue
 import threading
 
-import requests
+import urllib3
 
 
 class HyperlinkAvailabilityCheckWorker(threading.Thread):
     def __init__(self, rqueue, wqueue) -> None:
         self.rqueue = rqueue
         self.wqueue = wqueue
-        self._session = requests.Session()
+        self.http = urllib3.PoolManager()
         super().__init__(daemon=True)
 
     def run(self) -> None:
         while True:
             uri = self.wqueue.get()
             if not uri:
-                self._session.close()
+                self.http.clear()
                 break
 
-            self._session.request(
+            self.http.request(
                 'HEAD',
                 url=uri,
                 timeout=30,
