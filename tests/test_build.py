@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import namedtuple
-from queue import PriorityQueue, Queue
+from queue import Queue
 from pathlib import Path
 from threading import Thread
 from unittest import mock
@@ -88,7 +88,7 @@ def test_build_all(requests_head):
         # setup
         rqueue: Queue[CheckResult] = Queue()
         workers: list[HyperlinkAvailabilityCheckWorker] = []
-        wqueue: PriorityQueue[str | None] = PriorityQueue()
+        wqueue: Queue[str | None] = Queue()
 
         # invoke threads
         num_workers = 5
