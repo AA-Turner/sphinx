@@ -1,16 +1,13 @@
-from queue import Queue
-from threading import Thread
+import queue
+import threading
 
 import requests
 
-_USER_AGENT = (
-    'Mozilla/5.0 (X11; Linux x86_64; rv:100.0) Gecko/20100101 Firefox/100.0 '
-    'Sphinx/8.0.2'
-)
+_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64; rv:100.0) Gecko/20100101 Firefox/100.0'
 
 
-class HyperlinkAvailabilityCheckWorker(Thread):
-    def __init__(self, rqueue: Queue[str], wqueue: Queue[str | None]) -> None:
+class HyperlinkAvailabilityCheckWorker(threading.Thread):
+    def __init__(self, rqueue, wqueue) -> None:
         self.rqueue = rqueue
         self.wqueue = wqueue
         self._session = requests.Session()
@@ -27,9 +24,7 @@ class HyperlinkAvailabilityCheckWorker(Thread):
             try:
                 response = self._session.head(
                     url=uri,
-                    auth=None,
                     timeout=30,
-                    allow_redirects=True,
                     verify=True,
                     headers={'User-Agent': _USER_AGENT},
                 )
@@ -46,9 +41,9 @@ def test_build_all():
         print(f'loop: {i}')
 
         # setup
-        rqueue: Queue[str] = Queue()
+        rqueue = queue.Queue()
+        wqueue = queue.Queue()
         workers: list[HyperlinkAvailabilityCheckWorker] = []
-        wqueue: Queue[str | None] = Queue()
 
         # invoke threads
         num_workers = 5
