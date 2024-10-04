@@ -62,29 +62,12 @@ class HyperlinkAvailabilityCheckWorker(Thread):
                     _tls_info=(True, None),
                 )
                 # Copy data we need from the (closed) response
-                redirect_status_code = (
-                    response.history[-1].status_code if response.history else None
-                )  # NoQA: E501
-                retry_after = response.headers.get('Retry-After', '')
-                response_url = f'{response.url}'
                 response.raise_for_status()
                 del response
                 break
             except Exception as err:
-                # Unhandled exception (intermittent or permanent); report that
-                # the link is broken.
                 return 'broken', str(err), 0
-        else:
-            # All available retrieval methods have been exhausted; report
-            # that the link is broken.
-            return 'broken', error_message, 0
-
-        if response_url.rstrip('/') == req_url.rstrip('/'):
-            return 'working', '', 0
-        elif redirect_status_code is not None:
-            return 'redirected', response_url, redirect_status_code
-        else:
-            return 'redirected', response_url, 0
+        return 'broken', error_message, 0
 
 
 def request_session_head(url, **kwargs):
