@@ -60,6 +60,7 @@ jobs:
       run: sudo rm -rf "$(sudo python -c 'from markupsafe._speedups import __file__ as f; print(f)')"
     - name: Test with pytest
       run: |
+        sudo mkdir /cores
         ulimit -c unlimited
         sudo python -m pytest -vv --durations 25
         sudo chmod -R +rwx /cores/*
