@@ -53,7 +53,12 @@ def test_build_all():
         # check
         total_links = 0
         for hyperlink in (
+            'https://bugs.python.org/issue1000',
+            'https://python.org/dev/',
+            'https://bugs.python.org/issue1042',
             'https://peps.python.org/pep-0008/',
+            'https://datatracker.ietf.org/doc/html/rfc1.html',
+            'https://www.google.com',
         ):
             wqueue.put(hyperlink, False)
             total_links += 1
