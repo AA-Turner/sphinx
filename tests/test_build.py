@@ -1,6 +1,6 @@
 from unittest import mock
 
-import pytest
+from sphinx.testing.util import SphinxTestApp
 
 
 def request_session_head(url, **kwargs):
@@ -14,7 +14,7 @@ def request_session_head(url, **kwargs):
     'sphinx.builders.linkcheck.requests.head',
     side_effect=request_session_head,
 )
-@pytest.mark.sphinx('linkcheck')
-def test_build_all(requests_head, app):
+def test_build_all(requests_head):
+    app = SphinxTestApp('linkcheck')
     for _ in range(1_000):
         app.build()
