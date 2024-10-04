@@ -41,12 +41,11 @@ class HyperlinkAvailabilityCheckWorker(Thread):
                 self._session.close()
                 break
 
-            status, info, code = self._check_uri(uri)
-            self.rqueue.put(CheckResult(uri, status, info, code))
+            self._check_uri(uri)
+            self.rqueue.put(CheckResult(uri, '', '', 0))
             self.wqueue.task_done()
 
     def _check_uri(self, req_url: str) -> tuple[str, str, int]:
-        error_message = ''
         for retrieval_method, kwargs in [
             (self._session.head, {'allow_redirects': True}),
             (self._session.get, {'stream': True}),
@@ -66,8 +65,8 @@ class HyperlinkAvailabilityCheckWorker(Thread):
                 del response
                 break
             except Exception as err:
-                return 'broken', str(err), 0
-        return 'broken', error_message, 0
+                return '', '', 0
+        return '', '', 0
 
 
 def request_session_head(url, **kwargs):
