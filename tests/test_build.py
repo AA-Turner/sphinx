@@ -1,14 +1,19 @@
 from queue import Queue
 from threading import Thread
 
-from sphinx.util import requests
+import requests
+
+_USER_AGENT = (
+    'Mozilla/5.0 (X11; Linux x86_64; rv:100.0) Gecko/20100101 Firefox/100.0 '
+    'Sphinx/8.0.2'
+)
 
 
 class HyperlinkAvailabilityCheckWorker(Thread):
     def __init__(self, rqueue: Queue[str], wqueue: Queue[str | None]) -> None:
         self.rqueue = rqueue
         self.wqueue = wqueue
-        self._session = requests._Session()
+        self._session = requests.Session()
         super().__init__(daemon=True)
 
     def run(self) -> None:
@@ -23,11 +28,10 @@ class HyperlinkAvailabilityCheckWorker(Thread):
                 response = self._session.head(
                     url=uri,
                     auth=None,
-                    headers={},
                     timeout=30,
                     allow_redirects=True,
-                    _user_agent=None,
-                    _tls_info=(True, None),
+                    verify=True,
+                    headers={'User-Agent': _USER_AGENT},
                 )
                 response.raise_for_status()
                 del response
