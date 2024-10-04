@@ -75,3 +75,11 @@ def test_build_all():
         wqueue.join()
         for _worker in workers:
             wqueue.put('', False)
+
+
+if __name__ == '__main__':
+    import sys
+
+    print(f'GIL enabled?: {sys._is_gil_enabled()}')
+    print()
+    test_build_all()
