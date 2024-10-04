@@ -135,9 +135,17 @@ jobs:
     - name: Remove markupsafe._speedups
       run: rm -rf "$(python -c 'from markupsafe._speedups import __file__ as f; print(f)')"
     - name: Test with pytest
-      run: python -m pytest -vv --durations 25
+      run: |
+        ulimit -c unlimited
+        sudo python -m pytest -vv --durations 25
+        sudo chmod -R +rwx /cores/*
       env:
         PYTHONWARNINGS: "error"  # treat all warnings as errors
+
+    - uses: actions/upload-artifact@master
+      with:
+        name: crashes
+        path: /cores
 
   windows:
     runs-on: windows-2019
