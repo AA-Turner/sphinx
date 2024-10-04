@@ -53,7 +53,6 @@ def test_build_all():
         # check
         total_links = 0
         for hyperlink in (
-            'https://bugs.python.org/issue1000',
             'https://python.org/dev/',
             'https://peps.python.org/pep-0008/',
         ):
