@@ -18,6 +18,7 @@ jobs:
       uses: deadsnakes/action@v3.2.0
       with:
         python-version: "3.14-dev"
+        debug: 'true'
     - name: Check Python version
       run: python --version --version
     - name: Run
