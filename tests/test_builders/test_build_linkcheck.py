@@ -43,6 +43,9 @@ if TYPE_CHECKING:
 
     from sphinx.testing.util import SphinxTestApp
 
+if sys.version_info >= (3, 14):
+    raise pytest.skip('linkcheck segfaults on Python 3.14')
+
 
 class DefaultsHandler(BaseHTTPRequestHandler):
     protocol_version = 'HTTP/1.1'
