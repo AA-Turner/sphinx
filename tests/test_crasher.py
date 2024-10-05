@@ -6,6 +6,6 @@ class Baz:
         pass
 
 
-def test_autodoc_class_signature_separated_new():
+def test_crasher():
     obj = Baz.__dict__['__new__']
     inspect.isasyncgenfunction(obj)
