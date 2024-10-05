@@ -18,8 +18,6 @@ def test_autodoc_class_signature_separated_new(app):
         'members': None,
         'undoc-members': None,
     }
-
-    options = {} if options is None else options.copy()
     app.env.temp_data.setdefault('docname', 'index')  # set dummy docname
     doccls = app.registry.documenters['class']
     docoptions = process_documenter_options(doccls, app.config, options)

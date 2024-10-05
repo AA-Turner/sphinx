@@ -2210,7 +2210,10 @@ class MethodDocumenter(DocstringSignatureMixin, ClassLevelDocumenter):  # type: 
         super().add_directive_header(sig)
 
         sourcename = self.get_sourcename()
+        print(f'{sourcename=}')
+        print(f'{self.parent=}')
         obj = self.parent.__dict__.get(self.object_name, self.object)
+        print(f'{obj=}')
         if inspect.isabstractmethod(obj):
             self.add_line('   :abstractmethod:', sourcename)
         if inspect.iscoroutinefunction(obj) or inspect.isasyncgenfunction(obj):
