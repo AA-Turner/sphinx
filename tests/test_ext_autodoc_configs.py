@@ -1,7 +1,3 @@
-"""Test the autodoc extension.  This tests mainly for config variables"""
-
-from __future__ import annotations
-
 import inspect
 
 
