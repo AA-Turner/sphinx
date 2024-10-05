@@ -44,7 +44,7 @@ if TYPE_CHECKING:
     from sphinx.testing.util import SphinxTestApp
 
 if sys.version_info >= (3, 14):
-    raise pytest.skip('linkcheck segfaults on Python 3.14')
+    raise pytest.skip('linkcheck segfaults on Python 3.14', allow_module_level=True)
 
 
 class DefaultsHandler(BaseHTTPRequestHandler):
