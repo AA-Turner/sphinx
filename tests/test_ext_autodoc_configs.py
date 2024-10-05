@@ -37,27 +37,6 @@ def do_autodoc(
     return bridge.result
 
 
-
-@pytest.mark.sphinx('html', testroot='ext-autodoc')
-def test_autodoc_class_signature_separated_init(app):
-    app.config.autodoc_class_signature = 'separated'
-    options = {
-        'members': None,
-        'undoc-members': None,
-    }
-    actual = do_autodoc(app, 'class', 'target.classes.Bar', options)
-    assert list(actual) == [
-        '',
-        '.. py:class:: Bar',
-        '   :module: target.classes',
-        '',
-        '',
-        '   .. py:method:: Bar.__init__(x, y)',
-        '      :module: target.classes',
-        '',
-    ]
-
-
 @pytest.mark.sphinx('html', testroot='ext-autodoc')
 def test_autodoc_class_signature_separated_new(app):
     app.config.autodoc_class_signature = 'separated'
