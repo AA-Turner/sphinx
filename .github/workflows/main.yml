@@ -32,6 +32,6 @@ jobs:
         sed -i 's/flit_core>=3.7/flit_core @ git+https:\/\/github.com\/pypa\/flit.git#subdirectory=flit_core/' pyproject.toml
         python -m pip install .[test]
     - name: Test with pytest
-      run: python -u -m pytest -vv --durations 25
+      run: python -u -m pytest -vv --durations 25 --capture=tee-sys
       env:
         PYTHONWARNINGS: "error"  # treat all warnings as errors

@@ -10,6 +10,7 @@ from __future__ import annotations
 import functools
 import operator
 import re
+import sys
 from inspect import Parameter, Signature
 from typing import TYPE_CHECKING, Any, NewType, TypeVar
 
@@ -2214,6 +2215,7 @@ class MethodDocumenter(DocstringSignatureMixin, ClassLevelDocumenter):  # type: 
         print(f'{self.parent=}')
         obj = self.parent.__dict__.get(self.object_name, self.object)
         print(f'{obj=}')
+        sys.stdout.flush()
         if inspect.isabstractmethod(obj):
             self.add_line('   :abstractmethod:', sourcename)
         if inspect.iscoroutinefunction(obj) or inspect.isasyncgenfunction(obj):
