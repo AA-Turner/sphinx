@@ -19,6 +19,16 @@ class Baz:
 
 @pytest.mark.sphinx('html', testroot='ext-autodoc')
 def test_autodoc_class_signature_separated_new(app):
+    obj = Baz.__new__
+    if inspect.isabstractmethod(obj):
+        pass
+    if inspect.iscoroutinefunction(obj) or inspect.isasyncgenfunction(obj):
+        pass
+    if (inspect.isclassmethod(obj) or
+            inspect.is_singledispatch_method(obj) and inspect.isclassmethod(obj.func)):
+        pass
+
+
     app.config.autodoc_class_signature = 'separated'
     options = {
         'members': None,
