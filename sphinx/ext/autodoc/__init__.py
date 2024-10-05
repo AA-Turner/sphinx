@@ -58,6 +58,9 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+class Baz:
+    def __new__(cls, x, y):
+        pass
 
 # This type isn't exposed directly in any modules, but can be found
 # here in most Python versions
@@ -2210,10 +2213,12 @@ class MethodDocumenter(DocstringSignatureMixin, ClassLevelDocumenter):  # type: 
     def add_directive_header(self, sig: str) -> None:
         super().add_directive_header(sig)
 
+
         sourcename = self.get_sourcename()
         print(f'{sourcename=}')
         print(f'{self.parent=}')
-        obj = self.parent.__dict__.get(self.object_name, self.object)
+        # obj = self.parent.__dict__.get(self.object_name, self.object)
+        obj = Baz.__dict__['__new__']
         print(f'{obj=}')
         sys.stdout.flush()
         if inspect.isabstractmethod(obj):

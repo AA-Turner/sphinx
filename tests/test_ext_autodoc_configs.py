@@ -19,7 +19,7 @@ class Baz:
 
 @pytest.mark.sphinx('html', testroot='ext-autodoc')
 def test_autodoc_class_signature_separated_new(app):
-    obj = Baz.__new__
+    obj = Baz.__dict__['__new__']
     if inspect.isabstractmethod(obj):
         pass
     if inspect.iscoroutinefunction(obj) or inspect.isasyncgenfunction(obj):
