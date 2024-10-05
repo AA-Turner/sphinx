@@ -2,6 +2,7 @@
 
 import os
 import shutil
+import sys
 from contextlib import contextmanager
 from unittest import mock
 
@@ -63,6 +64,8 @@ nonascii file name page
     side_effect=request_session_head,
 )
 def test_build_all(requests_head, make_app, nonascii_srcdir, buildername):
+    if sys.version_info >= (3, 14) and buildername == 'linkcheck':
+        raise pytest.skip('linkcheck segfaults on Python 3.14')
     app = make_app(buildername, srcdir=nonascii_srcdir)
     app.build()
 
