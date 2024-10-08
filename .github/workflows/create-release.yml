@@ -58,7 +58,8 @@ jobs:
           path: ${{ steps.attest.outputs.bundle-path }}
 
       - name: Convert attestations to PEP 740
-        run: python utils/convert_attestations.py "${{ steps.attest.outputs.bundle-path }}"
+        run: |
+          python utils/convert_attestations.py "${{ steps.attest.outputs.bundle-path }}"
 
       - name: Inspect PEP 740 attestations
         run: |
