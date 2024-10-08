@@ -14,9 +14,11 @@ for line in bundle_path.read_bytes().splitlines():
     subjects = json.loads(base64.b64decode(dsse_envelope_payload))['subject']
     for subject in subjects:
         filename = subject['name']
+        print(f'Converting attestation for {filename}')
         sigstore_bundle = Bundle.from_json(line)
         attestation = Attestation.from_bundle(sigstore_bundle)
         print(attestation.model_dump_json())
         signature_path = DIST / f'{filename}.publish.attestation'
         signature_path.write_text(attestation.model_dump_json())
         print(f'Attestation for {filename} written to {signature_path}')
+        print()
