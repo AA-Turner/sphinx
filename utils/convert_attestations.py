@@ -3,9 +3,9 @@
 See https://github.com/trailofbits/pypi-attestations.
 """
 
-import base64
 import json
 import sys
+from base64 import b64decode
 from pathlib import Path
 
 from pypi_attestations import Attestation, Distribution
@@ -19,7 +19,7 @@ signer_identity = sys.argv[2]
 
 for line in bundle_path.read_bytes().splitlines():
     dsse_envelope_payload = json.loads(line)['dsseEnvelope']['payload']
-    subjects = json.loads(base64.b64decode(dsse_envelope_payload))['subject']
+    subjects = json.loads(b64decode(dsse_envelope_payload))['subject']
     for subject in subjects:
         filename = subject['name']
         assert (DIST / filename).is_file()
@@ -28,7 +28,6 @@ for line in bundle_path.read_bytes().splitlines():
         print(f'Converting attestation for {filename}')
         sigstore_bundle = Bundle.from_json(line)
         attestation = Attestation.from_bundle(sigstore_bundle)
-        print(attestation.model_dump_json())
         attestation_path = DIST / f'{filename}.publish.attestation'
         attestation_path.write_text(attestation.model_dump_json())
         print(f'Attestation for {filename} written to {attestation_path}')

@@ -62,13 +62,17 @@ jobs:
         run: |
           python -m pypi_attestations inspect dist/*.publish.attestation
 
-      - name: Upload attestations bundles
+      - name: Prepare attestation bundles for uploading
+        run: |
+          mkdir -p /tmp/attestation-bundles
+          cp "${{ steps.attest.outputs.bundle-path }}" /tmp/attestation-bundles/
+          cp dist/*.publish.attestation /tmp/attestation-bundles/
+
+      - name: Upload attestation bundles
         uses: actions/upload-artifact@v4
         with:
-          name: attestations
-          path: |
-            ${{ steps.attest.outputs.bundle-path }}
-            dist/*.publish.attestation
+          name: attestation-bundles
+          path: /tmp/attestation-bundles/
 
       - name: Mint PyPI API token
         id: mint-token
