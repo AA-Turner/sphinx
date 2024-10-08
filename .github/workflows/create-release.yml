@@ -77,23 +77,24 @@ jobs:
           predicate: "null"
           show-summary: "true"
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload sigstore JSONL attestations bundle
+        uses: actions/upload-artifact@v4
         with:
           name: sigstore-bundle
           path: ${{ steps.attest.outputs.bundle-path }}
 
-#      - name: Generate PEP 740 attestations
-#        run: |
-#          python -m pypi_attestations sign dist/*
-#
-#      - name: Inspect PEP 740 attestations
-#        run: |
-#          python -m pypi_attestations inspect dist/*.publish.attestation
-#
-#      - name: Verify PEP 740 attestations
-#        run: |
-#          python -m pypi_attestations verify dist/*.whl --identity https://github.com/${{ github.repository }}/.github/workflows/create-release.yml@${{ github.ref }}
-#          python -m pypi_attestations verify dist/*.tar.gz --identity https://github.com/${{ github.repository }}/.github/workflows/create-release.yml@${{ github.ref }}
+      - name: Convert attestations to PEP 740
+        run: python utils/convert_attestations.py "${{ steps.attest.outputs.bundle-path }}"
+
+      - name: Inspect PEP 740 attestations
+        run: |
+          python -m pypi_attestations inspect dist/*.publish.attestation
+
+      - name: Verify PEP 740 attestations
+        # workflow_ref example: sphinx-doc/sphinx/.github/workflows/create-release.yml@refs/heads/master
+        run: |
+          python -m pypi_attestations verify dist/*.whl --identity https://github.com/${{ github.workflow_ref }}
+          python -m pypi_attestations verify dist/*.tar.gz --identity https://github.com/${{ github.workflow_ref }}
 
 #      - name: Upload to PyPI
 #        env:
