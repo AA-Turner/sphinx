@@ -77,8 +77,10 @@ jobs:
           predicate: "null"
           show-summary: "true"
 
-      - run: cat "${{ steps.attest.outputs.bundle-path }}"
-      - run: jq < "${{ steps.attest.outputs.bundle-path }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sigstore-bundle
+          path: ${{ steps.attest.outputs.bundle-path }}
 
 #      - name: Generate PEP 740 attestations
 #        run: |
