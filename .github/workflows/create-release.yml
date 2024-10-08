@@ -19,6 +19,7 @@ jobs:
     name: PyPI Release
     permissions:
       id-token: write  # for PyPI trusted publishing
+      attestations: write  # for actions/attest
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -68,18 +69,25 @@ jobs:
             core.setSecret(api_token)
             core.setOutput('api-token', api_token)
 
-      - name: Generate PEP 740 attestations
-        run: | 
-          python -m pypi_attestations sign dist/*
+      - uses: actions/attest@v1
+        with:
+          subject-path: 'dist/*'
+          predicate-type: 'https://docs.pypi.org/attestations/publish/v1'
+          predicate: '{}'
+          show-summary: true
 
-      - name: Inspect PEP 740 attestations
-        run: | 
-          python -m pypi_attestations inspect dist/*.publish.attestation
-
-      - name: Verify PEP 740 attestations
-        run: | 
-          python -m pypi_attestations verify dist/*.whl --identity https://github.com/${{ github.repository }}/.github/workflows/create-release.yml@${{ github.ref }}
-          python -m pypi_attestations verify dist/*.tar.gz --identity https://github.com/${{ github.repository }}/.github/workflows/create-release.yml@${{ github.ref }}
+#      - name: Generate PEP 740 attestations
+#        run: |
+#          python -m pypi_attestations sign dist/*
+#
+#      - name: Inspect PEP 740 attestations
+#        run: |
+#          python -m pypi_attestations inspect dist/*.publish.attestation
+#
+#      - name: Verify PEP 740 attestations
+#        run: |
+#          python -m pypi_attestations verify dist/*.whl --identity https://github.com/${{ github.repository }}/.github/workflows/create-release.yml@${{ github.ref }}
+#          python -m pypi_attestations verify dist/*.tar.gz --identity https://github.com/${{ github.repository }}/.github/workflows/create-release.yml@${{ github.ref }}
 
 #      - name: Upload to PyPI
 #        env:
