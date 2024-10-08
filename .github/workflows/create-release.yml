@@ -51,25 +51,24 @@ jobs:
           predicate: "null"
           show-summary: "true"
 
-      - name: Upload sigstore JSONL attestations bundle
-        uses: actions/upload-artifact@v4
-        with:
-          name: sigstore-bundle
-          path: ${{ steps.attest.outputs.bundle-path }}
-
       - name: Convert attestations to PEP 740
-        run: |
-          python utils/convert_attestations.py "${{ steps.attest.outputs.bundle-path }}"
+        # workflow_ref example: sphinx-doc/sphinx/.github/workflows/create-release.yml@refs/heads/master
+        run: >
+          python utils/convert_attestations.py
+          "${{ steps.attest.outputs.bundle-path }}"
+          "https://github.com/${{ github.workflow_ref }}"
 
       - name: Inspect PEP 740 attestations
         run: |
           python -m pypi_attestations inspect dist/*.publish.attestation
 
-      - name: Verify PEP 740 attestations
-        # workflow_ref example: sphinx-doc/sphinx/.github/workflows/create-release.yml@refs/heads/master
-        run: |
-          python -m pypi_attestations verify dist/*.whl --identity https://github.com/${{ github.workflow_ref }}
-          python -m pypi_attestations verify dist/*.tar.gz --identity https://github.com/${{ github.workflow_ref }}
+      - name: Upload attestations bundles
+        uses: actions/upload-artifact@v4
+        with:
+          name: attestations
+          path: |
+            ${{ steps.attest.outputs.bundle-path }}
+            dist/*.publish.attestation
 
       - name: Mint PyPI API token
         id: mint-token
