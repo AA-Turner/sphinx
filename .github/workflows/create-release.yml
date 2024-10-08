@@ -70,11 +70,15 @@ jobs:
             core.setOutput('api-token', api_token)
 
       - uses: actions/attest@v1
+        id: attest
         with:
-          subject-path: 'dist/*'
-          predicate-type: 'https://docs.pypi.org/attestations/publish/v1'
-          predicate: '{}'
-          show-summary: true
+          subject-path: "dist/*"
+          predicate-type: "https://docs.pypi.org/attestations/publish/v1"
+          predicate: "null"
+          show-summary: "true"
+
+      - run: cat "${{ steps.attest.outputs.bundle-path }}"
+      - run: jq < "${{ steps.attest.outputs.bundle-path }}"
 
 #      - name: Generate PEP 740 attestations
 #        run: |
