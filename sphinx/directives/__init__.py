@@ -358,13 +358,8 @@ class DefaultDomain(SphinxDirective):
 
     def run(self) -> list[Node]:
         domain_name = self.arguments[0].lower()
-        # if domain_name not in env.domains:
-        #     # try searching by label
-        #     for domain in env.domains.sorted():
-        #         if domain.label.lower() == domain_name:
-        #             domain_name = domain.name
-        #             break
-        self.env.temp_data['default_domain'] = self.env.domains.get(domain_name)
+        default_domain = self.env.domains.get(domain_name)
+        self.env.temp_data['default_domain'] = default_domain
         return []
 
 

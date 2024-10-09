@@ -598,22 +598,23 @@ class Builder:
     @final
     def read_doc(self, docname: str, *, _cache: bool = True) -> None:
         """Parse a file and add/update inventory entries for the doctree."""
-        self.env.prepare_settings(docname)
+        env = self.env
+        env.prepare_settings(docname)
 
         # Add confdir/docutils.conf to dependencies list if exists
         docutilsconf = path.join(self.confdir, 'docutils.conf')
         if path.isfile(docutilsconf):
-            self.env.note_dependency(docutilsconf)
+            env.note_dependency(docutilsconf)
 
-        filename = str(self.env.doc2path(docname))
+        filename = str(env.doc2path(docname))
         filetype = get_filetype(self.app.config.source_suffix, filename)
         publisher = self.app.registry.get_publisher(self.app, filetype)
-        self.env.temp_data['_parser'] = publisher.parser
+        env.temp_data['_parser'] = publisher.parser
         # record_dependencies is mutable even though it is in settings,
         # explicitly re-initialise for each document
         publisher.settings.record_dependencies = DependencyList()
         with (
-            sphinx_domains(self.env),
+            sphinx_domains(domains=env.domains, temp_data=env.temp_data),
             rst.default_role(docname, self.config.default_role),
         ):
             # set up error_handler for the target document
@@ -625,11 +626,11 @@ class Builder:
             doctree = publisher.document
 
         # store time of reading, for outdated files detection
-        self.env.all_docs[docname] = time.time_ns() // 1_000
+        env.all_docs[docname] = time.time_ns() // 1_000
 
         # cleanup
-        self.env.temp_data.clear()
-        self.env.ref_context.clear()
+        env.temp_data.clear()
+        env.ref_context.clear()
 
         self.write_doctree(docname, doctree, _cache=_cache)
 

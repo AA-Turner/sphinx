@@ -19,7 +19,7 @@ from docutils.statemachine import State, StateMachine, StringList
 from docutils.utils import Reporter, unescape
 
 from sphinx.errors import SphinxError
-from sphinx.locale import _, __
+from sphinx.locale import __
 from sphinx.util import logging
 from sphinx.util.parsing import nested_parse_to_nodes
 
@@ -37,6 +37,7 @@ if TYPE_CHECKING:
 
     from sphinx.builders import Builder
     from sphinx.config import Config
+    from sphinx.domains import _DomainsContainer
     from sphinx.environment import BuildEnvironment
     from sphinx.util.typing import RoleFunction
 
@@ -261,41 +262,12 @@ class sphinx_domains(CustomReSTDispatcher):
     markup takes precedence.
     """
 
-    def __init__(self, env: BuildEnvironment) -> None:
-        self.env = env
+    def __init__(
+        self, *, domains: _DomainsContainer, temp_data: dict[str, Any]
+    ) -> None:
+        self.domains = domains
+        self.temp_data = temp_data
         super().__init__()
-
-    def lookup_domain_element(self, type: str, name: str) -> Any:
-        """Lookup a markup element (directive or role), given its name which can
-        be a full name (with domain).
-        """
-        name = name.lower()
-        # explicit domain given?
-        if ':' in name:
-            domain_name, name = name.split(':', 1)
-            if domain_name in self.env.domains:
-                domain = self.env.get_domain(domain_name)
-                element = getattr(domain, type)(name)
-                if element is not None:
-                    return element, []
-            else:
-                logger.warning(
-                    _('unknown directive or role name: %s:%s'), domain_name, name
-                )
-        # else look in the default domain
-        else:
-            def_domain = self.env.temp_data.get('default_domain')
-            if def_domain is not None:
-                element = getattr(def_domain, type)(name)
-                if element is not None:
-                    return element, []
-
-        # always look in the std domain
-        element = getattr(self.env.domains.standard_domain, type)(name)
-        if element is not None:
-            return element, []
-
-        raise ElementLookupError
 
     def directive(
         self,
@@ -303,10 +275,31 @@ class sphinx_domains(CustomReSTDispatcher):
         language_module: ModuleType,
         document: nodes.document,
     ) -> tuple[type[Directive] | None, list[system_message]]:
-        try:
-            return self.lookup_domain_element('directive', directive_name)
-        except ElementLookupError:
-            return super().directive(directive_name, language_module, document)
+        domain_name, _, name = directive_name.lower().rpartition(':')
+        # explicit domain given?
+        if domain_name:
+            if domain_name in self.domains:
+                element = self.domains[domain_name].directive(name)
+                if element is not None:
+                    return element, []
+            else:
+                logger.warning(
+                    __('unknown directive name: %s'), directive_name.lower()
+                )
+        # else look in the default domain
+        else:
+            default_domain = self.temp_data.get('default_domain')
+            if default_domain is not None:
+                element = default_domain.directive(name)
+                if element is not None:
+                    return element, []
+
+        # always look in the std domain
+        element = self.domains.standard_domain.directive(name)
+        if element is not None:
+            return element, []
+
+        return super().directive(directive_name, language_module, document)
 
     def role(
         self,
@@ -315,10 +308,31 @@ class sphinx_domains(CustomReSTDispatcher):
         lineno: int,
         reporter: Reporter,
     ) -> tuple[RoleFunction, list[system_message]]:
-        try:
-            return self.lookup_domain_element('role', role_name)
-        except ElementLookupError:
-            return super().role(role_name, language_module, lineno, reporter)
+        domain_name, _, name = role_name.lower().rpartition(':')
+        # explicit domain given?
+        if domain_name:
+            if domain_name in self.domains:
+                element = self.domains[domain_name].role(name)
+                if element is not None:
+                    return element, []
+            else:
+                logger.warning(
+                    __('unknown role name: %s'), role_name.lower()
+                )
+        # else look in the default domain
+        else:
+            default_domain = self.temp_data.get('default_domain')
+            if default_domain is not None:
+                element = default_domain.role(name)
+                if element is not None:
+                    return element, []
+
+        # always look in the std domain
+        element = self.domains.standard_domain.role(name)
+        if element is not None:
+            return element, []
+
+        return super().role(role_name, language_module, lineno, reporter)
 
 
 class WarningStream:

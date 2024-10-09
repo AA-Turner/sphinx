@@ -557,11 +557,12 @@ class PythonModuleIndex(Index):
     localname = _('Python Module Index')
     shortname = _('modules')
 
-    def generate(self, docnames: Iterable[str] | None = None,
-                 ) -> tuple[list[tuple[str, list[IndexEntry]]], bool]:
+    def generate(
+        self, docnames: Iterable[str] | None = None
+    ) -> tuple[list[tuple[str, list[IndexEntry]]], bool]:
         content: dict[str, list[IndexEntry]] = {}
         # list of prefixes to ignore
-        ignores: list[str] = self.domain.env.config['modindex_common_prefix']
+        ignores: list[str] = self.domain.modindex_common_prefix
         ignores = sorted(ignores, key=len, reverse=True)
         # list of all modules, sorted by module name
         modules = sorted(self.domain.data['modules'].items(),
@@ -674,6 +675,10 @@ class PythonDomain(Domain):
     indices = [
         PythonModuleIndex,
     ]
+
+    def __init__(self, env: BuildEnvironment) -> None:
+        super().__init__(env)
+        self.modindex_common_prefix = env.config.modindex_common_prefix
 
     @property
     def objects(self) -> dict[str, ObjectEntry]:

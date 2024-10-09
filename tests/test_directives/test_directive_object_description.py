@@ -18,10 +18,11 @@ if TYPE_CHECKING:
 
 
 def _doctree_for_test(builder: Builder, docname: str) -> nodes.document:
-    builder.env.prepare_settings(docname)
+    env = builder.env
+    env.prepare_settings(docname)
     publisher = create_publisher(builder.app, 'restructuredtext')
-    with sphinx_domains(builder.env):
-        publisher.set_source(source_path=str(builder.env.doc2path(docname)))
+    with sphinx_domains(domains=env.domains, temp_data=env.temp_data):
+        publisher.set_source(source_path=str(env.doc2path(docname)))
         publisher.publish()
         return publisher.document
 
