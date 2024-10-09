@@ -264,6 +264,7 @@ class BuildEnvironment:
             )
         # setup domains (must do after all initialization)
         self.domains._setup()
+        _a = 1
 
         # Initialise config.
         # The old config is self.config, restored from the pickled environment.

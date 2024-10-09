@@ -107,6 +107,7 @@ class Domain:
     data_version = 0
 
     def __init__(self, env: BuildEnvironment) -> None:
+        domaindata = env.domaindata
         self.env: BuildEnvironment = env
         self._role_cache: dict[str, Callable] = {}
         self._directive_cache: dict[str, Callable] = {}
@@ -119,13 +120,13 @@ class Domain:
         self.roles = dict(self.roles)
         self.indices = list(self.indices)
 
-        if self.name not in env.domaindata:
+        if self.name not in domaindata:
             assert isinstance(self.initial_data, dict)
             new_data = copy.deepcopy(self.initial_data)
             new_data['version'] = self.data_version
-            self.data = env.domaindata[self.name] = new_data
+            self.data = domaindata[self.name] = new_data
         else:
-            self.data = env.domaindata[self.name]
+            self.data = domaindata[self.name]
             if self.data['version'] != self.data_version:
                 raise OSError('data of %r domain out of date' % self.label)
         for name, obj in self.object_types.items():
