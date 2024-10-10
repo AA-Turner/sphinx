@@ -115,7 +115,7 @@ def test_format_date_timezone():
 @pytest.mark.sphinx('html', testroot='root')
 def test_get_filename_for_language(app):
     get_filename = i18n.get_image_filename_for_language
-    app.env.temp_data['docname'] = 'index'
+    app.env.temp_data._docname = 'index'
 
     # language is en
     app.env.config.language = 'en'
@@ -154,7 +154,7 @@ def test_get_filename_for_language(app):
     assert get_filename('foo.png', app.env) == '/en/foo.png'
 
     # docpath (for a document in the sub directory)
-    app.env.temp_data['docname'] = 'subdir/index'
+    app.env.temp_data._docname = 'subdir/index'
     assert get_filename('foo.png', app.env) == '/subdir/en/foo.png'
 
 

@@ -37,7 +37,7 @@ def settings(app):
     settings = optparser.get_default_values()
     settings.smart_quotes = True
     settings.env = env
-    settings.env.temp_data['docname'] = 'dummy'
+    settings.env.temp_data._docname = 'dummy'
     settings.contentsname = 'dummy'
     domain_context = sphinx_domains(domains=env.domains, temp_data=env.temp_data)
     domain_context.enable()

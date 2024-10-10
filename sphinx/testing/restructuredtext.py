@@ -13,7 +13,7 @@ def parse(app: Sphinx, text: str, docname: str = 'index') -> nodes.document:
     """Parse a string as reStructuredText with Sphinx application."""
     env = app.env
     try:
-        env.temp_data['docname'] = docname
+        env.temp_data._docname = docname
         reader = SphinxStandaloneReader()
         reader.setup(app)
         parser = RSTParser()

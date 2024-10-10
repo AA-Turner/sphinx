@@ -6,7 +6,7 @@ import functools
 import os
 import pickle
 from collections import defaultdict
-from copy import copy
+from copy import copy, deepcopy
 from os import path
 from typing import TYPE_CHECKING
 
@@ -198,7 +198,7 @@ class BuildEnvironment:
         self.original_image_uri: dict[_StrPath, str] = {}
 
         # temporary data storage while reading a document
-        self.temp_data: dict[str, Any] = {}
+        self.temp_data: CurrentDocument = CurrentDocument()
         # context for cross-references (e.g. current module or class)
         # this is similar to temp_data, but will for example be copied to
         # attributes of "any" cross references
@@ -559,32 +559,31 @@ class BuildEnvironment:
 
     def prepare_settings(self, docname: str) -> None:
         """Prepare to set up environment for reading."""
-        self.temp_data['docname'] = docname
-        # defaults to the global default, but can be re-set in a document
-        self.temp_data['default_role'] = self.config.default_role
-        self.temp_data['default_domain'] = self.domains.get(self.config.primary_domain)
+        self.temp_data = CurrentDocument(
+            docname=docname,
+            # defaults to the global default, but can be re-set in a document
+            default_role=self.config.default_role,
+            default_domain=self.domains.get(self.config.primary_domain),
+        )
 
     # utilities to use while reading a document
 
     @property
     def docname(self) -> str:
         """Returns the docname of the document currently being parsed."""
-        return self.temp_data['docname']
+        return self.temp_data.docname
 
     @property
     def parser(self) -> Parser:
         """Returns the parser being used for to parse the current document."""
-        return self.temp_data['_parser']
+        return self.temp_data.parser
 
     def new_serialno(self, category: str = '') -> int:
         """Return a serial number, e.g. for index entry targets.
 
         The number is guaranteed to be unique in the current document.
         """
-        key = category + 'serialno'
-        cur = self.temp_data.get(key, 0)
-        self.temp_data[key] = cur + 1
-        return cur
+        return self.temp_data.new_serial_number(category)
 
     def note_dependency(self, filename: str) -> None:
         """Add *filename* as a dependency of the current document.
@@ -723,10 +722,12 @@ class BuildEnvironment:
 
     def apply_post_transforms(self, doctree: nodes.document, docname: str) -> None:
         """Apply all post-transforms."""
+        backup = self.temp_data
+        new = deepcopy(backup)
+        new._docname = docname
         try:
             # set env.docname during applying post-transforms
-            backup = copy(self.temp_data)
-            self.temp_data['docname'] = docname
+            self.temp_data = new
 
             transformer = SphinxTransformer(doctree)
             transformer.set_environment(self)
@@ -818,3 +819,96 @@ def _traverse_toctree(
             if sub_docname not in traversed:
                 yield sub_parent, sub_docname
                 traversed.add(sub_docname)
+
+
+class CurrentDocument:
+    """Temporary data storage while reading a document."""
+
+    __slots__ = (
+        '_parser',
+        '_docname',
+        '_default_role',
+        '_default_domain',
+        '_serial_numbers',
+        '_temp_data',
+    )
+
+    def __init__(
+        self,
+        *,
+        docname: str,
+        default_role: str,
+        default_domain: Domain,
+    ) -> None:
+        self._docname = docname
+        # defaults to the global default, but can be re-set in a document
+        self._default_role = default_role
+        self._default_domain = default_domain
+        self._parser = None
+        self._serial_numbers = {}
+        self._temp_data: dict[str, Any] = {}
+
+    @property
+    def docname(self) -> str:
+        """Returns the docname of the document currently being parsed."""
+        if self._docname:
+            return self._docname
+        raise LookupError
+
+    @property
+    def parser(self) -> Parser:
+        """Returns the parser being used for to parse the current document."""
+        if self._parser is not None:
+            return self._parser
+        raise LookupError
+
+    def new_serial_number(self, category: str = '', /) -> int:
+        """Return a serial number, e.g. for index entry targets.
+
+        The number is guaranteed to be unique in the current document.
+        """
+        current = self._serial_numbers.get(category, 0)
+        self._serial_numbers[category] = current + 1
+        return current
+
+    # Mapping interface:
+
+    def __getitem__(self, item: str) -> Any:
+        if item == 'docname':
+            return self.docname
+        if item == 'default_role':
+            return self._default_role
+        return self._temp_data[item]
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        if key == 'docname':
+            self._docname = value
+        elif key == 'default_role':
+            self._default_role = value
+        else:
+            self._temp_data[key] = value
+
+    def get(self, key: str, default: Any | None = None) -> Any | None:
+        if key == 'docname':
+            return self.docname
+        if key == 'default_role':
+            return self._default_role
+        return self._temp_data.get(key, default)
+
+    def pop(self, key: str, default: Any | None = None) -> Any | None:
+        if key == 'docname':
+            try:
+                docname = self.docname
+            except LookupError:
+                return default
+            else:
+                self._docname = ''
+                return docname
+        return self._temp_data.pop(key, default)
+
+    def setdefault(self, key: str, default: Any | None = None) -> Any | None:
+        if key == 'docname':
+            if not self._docname:
+                self._docname = default
+            return self.docname
+        return self._temp_data.setdefault(key, default)

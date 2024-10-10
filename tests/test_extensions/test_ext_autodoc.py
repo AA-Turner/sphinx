@@ -526,7 +526,7 @@ def test_autodoc_exception(app):
 
 @pytest.mark.sphinx('html', testroot='ext-autodoc')
 def test_autodoc_warnings(app):
-    app.env.temp_data['docname'] = 'dummy'
+    app.env.temp_data._docname = 'dummy'
 
     # can't import module
     do_autodoc(app, 'module', 'unknown')

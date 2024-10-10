@@ -183,7 +183,7 @@ def test_env_relfn2path(app):
     assert absfn == str(app.srcdir / 'logo.jpg')
 
     # omit docname (w/ current docname)
-    app.env.temp_data['docname'] = 'subdir/document'
+    app.env.temp_data._docname = 'subdir/document'
     relfn, absfn = app.env.relfn2path('images/logo.jpg')
     assert Path(relfn) == Path('subdir/images/logo.jpg')
     assert absfn == str(app.srcdir / 'subdir' / 'images' / 'logo.jpg')

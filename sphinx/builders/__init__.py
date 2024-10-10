@@ -609,7 +609,7 @@ class Builder:
         filename = str(env.doc2path(docname))
         filetype = get_filetype(self.app.config.source_suffix, filename)
         publisher = self.app.registry.get_publisher(self.app, filetype)
-        env.temp_data['_parser'] = publisher.parser
+        env.temp_data._parser = publisher.parser
         # record_dependencies is mutable even though it is in settings,
         # explicitly re-initialise for each document
         publisher.settings.record_dependencies = DependencyList()

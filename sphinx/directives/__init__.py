@@ -331,7 +331,7 @@ class DefaultRole(SphinxDirective):
         )
         if role:
             docutils.register_role('', role)  # type: ignore[arg-type]
-            self.env.temp_data['default_role'] = role_name
+            self.env.temp_data._default_role = role_name
         else:
             literal_block = nodes.literal_block(self.block_text, self.block_text)
             reporter = self.state.reporter
@@ -359,7 +359,7 @@ class DefaultDomain(SphinxDirective):
     def run(self) -> list[Node]:
         domain_name = self.arguments[0].lower()
         default_domain = self.env.domains.get(domain_name)
-        self.env.temp_data['default_domain'] = default_domain
+        self.env.temp_data._default_domain = default_domain
         return []
 
 
