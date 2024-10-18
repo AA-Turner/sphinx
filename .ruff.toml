@@ -34,6 +34,8 @@ ignore = [
     "FURB103",  # `open` and `write` should be replaced by `Path(...).write_text(...)`
     # perflint
     "PERF203",  # `try`-`except` within a loop incurs performance overhead
+    # flake8-pie ('PIE')
+    "PIE790",  # Unnecessary `pass` statement
     # pylint ('PLC')
     "PLC0206",  # Extracting value from dictionary without calling `.items()`
     "PLC0415",  # `import` should be at the top-level of a file
@@ -194,14 +196,7 @@ select = [
     # pygrep-hooks ('PGH')
     "PGH",
     # flake8-pie ('PIE')
-#    "PIE790",  # Unnecessary `pass` statement
-    "PIE794",  # Class field `{name}` is defined multiple times
-    "PIE796",  # Enum contains duplicate value: `{value}`
-    "PIE800",  # Unnecessary spread `**`
-    "PIE804",  # Unnecessary `dict` kwargs
-    "PIE807",  # Prefer `{container}` over useless lambda
-    "PIE808",  # Unnecessary `start` argument in `range`
-    "PIE810",  # Call `{attr}` once with a `tuple`
+    "PIE",  # Call `{attr}` once with a `tuple`
     # pylint ('PLC')
     "PLC",
     # pylint ('PLE')
