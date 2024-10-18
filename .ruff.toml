@@ -175,7 +175,8 @@ select = [
     "PIE796",  # Enum contains duplicate value: `{value}`
     "PIE800",  # Unnecessary spread `**`
     "PIE804",  # Unnecessary `dict` kwargs
-    "PIE807",  # Prefer `list` over useless lambda
+    "PIE807",  # Prefer `{container}` over useless lambda
+    "PIE808",  # Unnecessary `start` argument in `range`
     "PIE810",  # Call `{attr}` once with a `tuple`
     # pylint ('PLC')
     "PLC0105",  # `{kind}` name "{param_name}" does not reflect its {variance}; consider renaming it to "{replacement_name}"
