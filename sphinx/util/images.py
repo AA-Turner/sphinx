@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import base64
+import os
 from os import path
+from pathlib import Path
 from typing import TYPE_CHECKING, NamedTuple, overload
 
 import imagesize
@@ -37,7 +39,8 @@ class DataURI(NamedTuple):
     data: bytes
 
 
-def get_image_size(filename: str) -> tuple[int, int] | None:
+def get_image_size(filename: str | os.PathLike[str]) -> tuple[int, int] | None:
+    filename = Path(filename)
     try:
         size = imagesize.get(filename)
         if size[0] == -1:

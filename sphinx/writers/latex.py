@@ -583,12 +583,13 @@ class LaTeXTranslator(SphinxTranslator):
     def render(self, template_name: str, variables: dict[str, Any]) -> str:
         renderer = LaTeXRenderer(latex_engine=self.config.latex_engine)
         for template_dir in self.config.templates_path:
-            template = path.join(self.builder.confdir, template_dir, template_name)
-            if path.exists(template):
+            template = self.builder.confdir / template_dir / template_name
+            if template.exists():
                 return renderer.render(template, variables)
-            elif template.endswith('.jinja'):
-                legacy_template = template.removesuffix('.jinja') + '_t'
-                if path.exists(legacy_template):
+            elif template.suffix == '.jinja':
+                legacy_template_name = template.name.removesuffix('.jinja') + '_t'
+                legacy_template = template.with_name(legacy_template_name)
+                if legacy_template.exists():
                     logger.warning(
                         __('template %s not found; loading from legacy %s instead'),
                         template_name,
