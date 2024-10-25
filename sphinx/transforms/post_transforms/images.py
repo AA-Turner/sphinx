@@ -42,8 +42,8 @@ class BaseImageConverter(SphinxTransform):
         pass
 
     @property
-    def imagedir(self) -> str:
-        return os.path.join(self.app.doctreedir, 'images')
+    def imagedir(self) -> _StrPath:
+        return self.app.doctreedir / 'images'
 
 
 class ImageDownloader(BaseImageConverter):
@@ -142,7 +142,7 @@ class DataURIExtractor(BaseImageConverter):
             )
             return
 
-        ensuredir(os.path.join(self.imagedir, 'embeded'))
+        ensuredir(self.imagedir / 'embeded')
         digest = sha1(image.data, usedforsecurity=False).hexdigest()
         path = _StrPath(self.imagedir, 'embeded', digest + ext)
         self.app.env.original_image_uri[path] = node['uri']
@@ -248,7 +248,7 @@ class ImageConverter(BaseImageConverter):
         if '?' in node['candidates']:
             return []
         elif '*' in node['candidates']:
-            path = os.path.join(self.app.srcdir, node['uri'])
+            path = self.app.srcdir / node['uri']
             guessed = guess_mimetype(path)
             return [guessed] if guessed is not None else []
         else:
@@ -265,9 +265,9 @@ class ImageConverter(BaseImageConverter):
         filename = self.env.images[srcpath][1]
         filename = get_filename_for(filename, _to)
         ensuredir(self.imagedir)
-        destpath = os.path.join(self.imagedir, filename)
+        destpath = self.imagedir / filename
 
-        abs_srcpath = os.path.join(self.app.srcdir, srcpath)
+        abs_srcpath = self.app.srcdir / srcpath
         if self.convert(abs_srcpath, destpath):
             if '*' in node['candidates']:
                 node['candidates']['*'] = destpath
@@ -278,7 +278,9 @@ class ImageConverter(BaseImageConverter):
             self.env.original_image_uri[_StrPath(destpath)] = srcpath
             self.env.images.add_file(self.env.docname, destpath)
 
-    def convert(self, _from: str, _to: str) -> bool:
+    def convert(
+        self, _from: str | os.PathLike[str], _to: str | os.PathLike[str]
+    ) -> bool:
         """Convert an image file to the expected format.
 
         *_from* is a path of the source image file, and *_to* is a path

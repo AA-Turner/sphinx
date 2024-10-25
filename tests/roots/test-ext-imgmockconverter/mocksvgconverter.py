@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 from typing import TYPE_CHECKING
 
@@ -22,7 +23,7 @@ class MyConverter(ImageConverter):
     def is_available(self) -> bool:
         return True
 
-    def convert(self, _from: str, _to: str) -> bool:
+    def convert(self, _from: str | os.PathLike[str], _to: str | os.PathLike[str]) -> bool:
         """Mock converts the image from SVG to PDF."""
         shutil.copyfile(_from, _to)
         return True

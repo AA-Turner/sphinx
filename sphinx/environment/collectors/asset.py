@@ -88,18 +88,18 @@ class ImageCollector(EnvironmentCollector):
 
             # map image paths to unique image names (so that they can be put
             # into a single directory)
-            for imgpath in candidates.values():
-                app.env.dependencies[docname].add(imgpath)
-                if not os.access(path.join(app.srcdir, imgpath), os.R_OK):
+            for img_path in candidates.values():
+                app.env.dependencies[docname].add(img_path)
+                if not os.access(app.srcdir / img_path, os.R_OK):
                     logger.warning(
                         __('image file not readable: %s'),
-                        imgpath,
+                        img_path,
                         location=node,
                         type='image',
                         subtype='not_readable',
                     )
                     continue
-                app.env.images.add_file(docname, imgpath)
+                app.env.images.add_file(docname, img_path)
 
     def collect_candidates(
         self,
@@ -110,7 +110,7 @@ class ImageCollector(EnvironmentCollector):
     ) -> None:
         globbed: dict[str, list[str]] = {}
         for filename in glob(imgpath):
-            new_imgpath = relative_path(path.join(env.srcdir, 'dummy'), filename)
+            new_imgpath = relative_path(env.srcdir / 'dummy', filename)
             try:
                 mimetype = guess_mimetype(filename)
                 if mimetype is None:

@@ -4,8 +4,10 @@ import hashlib
 import os.path
 from typing import Any
 
+from sphinx.util._pathlib import _StrPath
 
-class FilenameUniqDict(dict[str, tuple[set[str], str]]):
+
+class FilenameUniqDict(dict[_StrPath, tuple[set[str], str]]):
     """
     A dictionary that automatically generates unique names for its keys,
     interpreted as filenames, and keeps track of a set of docnames they
@@ -15,19 +17,22 @@ class FilenameUniqDict(dict[str, tuple[set[str], str]]):
     def __init__(self) -> None:
         self._existing: set[str] = set()
 
-    def add_file(self, docname: str, newfile: str) -> str:
-        if newfile in self:
-            self[newfile][0].add(docname)
-            return self[newfile][1]
-        uniquename = os.path.basename(newfile)
-        base, ext = os.path.splitext(uniquename)
+    def add_file(self, docname: str, newfile: str | os.PathLike[str]) -> str:
+        new_file = _StrPath(newfile).resolve()
+        if new_file in self:
+            docnames, unique_name = self[new_file]
+            docnames.add(docname)
+            return unique_name
+        unique_name = new_file.name
+        base = new_file.stem
+        ext = new_file.suffix
         i = 0
-        while uniquename in self._existing:
+        while unique_name in self._existing:
             i += 1
-            uniquename = f'{base}{i}{ext}'
-        self[newfile] = ({docname}, uniquename)
-        self._existing.add(uniquename)
-        return uniquename
+            unique_name = f'{base}{i}{ext}'
+        self[new_file] = ({docname}, unique_name)
+        self._existing.add(unique_name)
+        return unique_name
 
     def purge_doc(self, docname: str) -> None:
         for filename, (docs, unique) in list(self.items()):
@@ -37,7 +42,7 @@ class FilenameUniqDict(dict[str, tuple[set[str], str]]):
                 self._existing.discard(unique)
 
     def merge_other(
-        self, docnames: set[str], other: dict[str, tuple[set[str], Any]]
+        self, docnames: set[str], other: dict[_StrPath, tuple[set[str], Any]]
     ) -> None:
         for filename, (docs, _unique) in other.items():
             for doc in docs & set(docnames):
