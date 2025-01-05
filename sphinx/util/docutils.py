@@ -37,7 +37,8 @@ if TYPE_CHECKING:
 
     from sphinx.builders import Builder
     from sphinx.config import Config
-    from sphinx.environment import BuildEnvironment
+    from sphinx.domains import _DomainsContainer
+    from sphinx.environment import BuildEnvironment, _CurrentDocument
     from sphinx.util.typing import RoleFunction
 
 
@@ -262,9 +263,11 @@ class sphinx_domains(CustomReSTDispatcher):
     markup takes precedence.
     """
 
-    def __init__(self, env: BuildEnvironment) -> None:
-        self.domains = env.domains
-        self.current_document = env.current_document
+    def __init__(
+        self, *, domains: _DomainsContainer, current_document: _CurrentDocument
+    ) -> None:
+        self.domains = domains
+        self.current_document = current_document
         super().__init__()
 
     def directive(

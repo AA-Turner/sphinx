@@ -632,7 +632,7 @@ class Builder:
         # explicitly re-initialise for each document
         publisher.settings.record_dependencies = DependencyList()
         with (
-            sphinx_domains(env),
+            sphinx_domains(domains=env.domains, current_document=env.current_document),
             rst.default_role(docname, self.config.default_role),
         ):
             # set up error_handler for the target document

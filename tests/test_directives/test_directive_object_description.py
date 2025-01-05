@@ -23,7 +23,7 @@ def _doctree_for_test(
 ) -> nodes.document:
     env.prepare_settings(docname)
     publisher = create_publisher(app, 'restructuredtext')
-    with sphinx_domains(env):
+    with sphinx_domains(domains=env.domains, current_document=env.current_document):
         publisher.set_source(source_path=str(env.doc2path(docname)))
         publisher.publish()
         return publisher.document

@@ -41,7 +41,9 @@ def settings(app):
     settings.env = env
     settings.env.current_document.docname = 'dummy'
     settings.contentsname = 'dummy'
-    domain_context = sphinx_domains(env)
+    domain_context = sphinx_domains(
+        domains=env.domains, current_document=env.current_document
+    )
     domain_context.enable()
     yield settings
     domain_context.disable()
