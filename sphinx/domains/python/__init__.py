@@ -753,8 +753,13 @@ class PythonDomain(Domain):
         PythonModuleIndex,
     ]
 
-    def __init__(self, env: BuildEnvironment) -> None:
-        super().__init__(env)
+    def __init__(
+        self,
+        env: BuildEnvironment,
+        *,
+        domain_data: dict[str, dict[str, Any]] | None = None,
+    ) -> None:
+        super().__init__(env, domain_data=domain_data)
         self.modindex_common_prefix = env.config.modindex_common_prefix
 
     @property

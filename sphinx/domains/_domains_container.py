@@ -97,16 +97,16 @@ class _DomainsContainer:
         from sphinx.domains.std import StandardDomain
 
         return cls(
-            c=CDomain(env),
-            changeset=ChangeSetDomain(env),
-            citation=CitationDomain(env),
-            cpp=CPPDomain(env),
-            index=IndexDomain(env),
-            js=JavaScriptDomain(env),
-            math=MathDomain(env),
-            py=PythonDomain(env),
-            rst=ReSTDomain(env),
-            std=StandardDomain(env),
+            c=CDomain(env, domain_data=env.domaindata),
+            changeset=ChangeSetDomain(env, domain_data=env.domaindata),
+            citation=CitationDomain(env, domain_data=env.domaindata),
+            cpp=CPPDomain(env, domain_data=env.domaindata),
+            index=IndexDomain(env, domain_data=env.domaindata),
+            js=JavaScriptDomain(env, domain_data=env.domaindata),
+            math=MathDomain(env, domain_data=env.domaindata),
+            py=PythonDomain(env, domain_data=env.domaindata),
+            rst=ReSTDomain(env, domain_data=env.domaindata),
+            std=StandardDomain(env, domain_data=env.domaindata),
         )
 
     def __init__(

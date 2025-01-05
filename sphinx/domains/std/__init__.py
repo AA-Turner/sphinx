@@ -747,8 +747,13 @@ class StandardDomain(Domain):
         nodes.container: ('code-block', None),
     }
 
-    def __init__(self, env: BuildEnvironment) -> None:
-        super().__init__(env)
+    def __init__(
+        self,
+        env: BuildEnvironment,
+        *,
+        domain_data: dict[str, dict[str, Any]] | None = None,
+    ) -> None:
+        super().__init__(env, domain_data=domain_data)
 
         # set up enumerable nodes
         self.enumerable_nodes = copy(

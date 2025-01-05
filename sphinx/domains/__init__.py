@@ -106,8 +106,14 @@ class Domain:
     #: data version, bump this when the format of `self.data` changes
     data_version = 0
 
-    def __init__(self, env: BuildEnvironment) -> None:
-        domain_data: dict[str, dict[str, Any]] = env.domaindata
+    def __init__(
+        self,
+        env: BuildEnvironment,
+        *,
+        domain_data: dict[str, dict[str, Any]] | None = None,
+    ) -> None:
+        if domain_data is None:
+            domain_data = env.domaindata
         self.env: BuildEnvironment = env
         self._role_cache: dict[str, RoleFunction] = {}
         self._directive_cache: dict[str, type[Directive]] = {}

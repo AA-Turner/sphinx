@@ -189,7 +189,7 @@ class SphinxComponentRegistry:
 
     def create_domains(self, env: BuildEnvironment) -> Iterator[Domain]:
         for DomainClass in self.domains.values():
-            domain = DomainClass(env)
+            domain = DomainClass(env, domain_data=env.domaindata)
 
             # transplant components added by extensions
             domain.directives.update(self.domain_directives.get(domain.name, {}))
