@@ -129,7 +129,7 @@ class TodoListProcessor:
         self.builder = app.builder
         self.config = app.config
         self.env = app.env
-        self.domain = app.env.domains['todo']
+        self.domain: TodoDomain = app.env.domains['todo']
         self.document = new_document('')
 
         self.process(doctree, docname)

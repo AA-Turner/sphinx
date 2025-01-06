@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections import defaultdict
 
 from docutils.parsers.rst import directives
@@ -39,6 +41,7 @@ class IngredientIndex(Index):
     name = 'ingredient'
     localname = 'Ingredient Index'
     shortname = 'Ingredient'
+    domain: RecipeDomain
 
     def generate(self, docnames=None):
         content = defaultdict(list)
