@@ -64,7 +64,7 @@ def _load_subcommand_descriptions() -> Iterator[tuple[str, str]]:
             # log an error here, but don't fail the full enumeration
             print(f'Failed to load the description for {command}', file=sys.stderr)
         else:
-            yield command, description.split('\n\n', 1)[0]
+            yield command, description.partition('\n\n')[0]
 
 
 class _RootArgumentParser(argparse.ArgumentParser):
@@ -178,7 +178,7 @@ def _create_parser() -> _RootArgumentParser:
         prog='sphinx',
         description=__('   Manage documentation with Sphinx.'),
         epilog=__(
-            'For more information, visit https://www.sphinx-doc.org/en/master/man/.'
+            'For more information, visit <https://www.sphinx-doc.org/en/master/man/>.'
         ),
         add_help=False,
         allow_abbrev=False,
@@ -218,11 +218,18 @@ def _create_parser() -> _RootArgumentParser:
         help=__('Only print errors and warnings.'),
     )
     log_control.add_argument(
+        '-Q',
         '--silent',
         action='store_const',
         dest='verbosity',
         const=-2,
         help=__('No output at all'),
+    )
+    parser.add_argument(
+        '--colour',
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=__('Emit coloured output to the terminal, if supported'),
     )
 
     parser.add_argument(
