@@ -21,7 +21,7 @@ jobs:
     name: PyPI Release
     permissions:
       attestations: write  # for actions/attest
-      id-token: write  # for PyPI trusted publishing
+      id-token: write  # for actions/attest & PyPI trusted publishing
     steps:
       - uses: actions/checkout@v4
         with:
@@ -39,6 +39,7 @@ jobs:
       - name: Install build dependencies (pypa/build, twine)
         run: |
           uv pip install build "twine>=5.1"
+          uv pip install pypi-attestations==0.0.21 betterproto==2.0.0b6
 
       - name: Build distribution
         run: python -m build
@@ -58,7 +59,7 @@ jobs:
 
       - name: Convert attestations to PEP 740
         run: >
-          uv run utils/convert_attestations.py
+          python utils/convert_attestations.py
           "$BUNDLE_PATH"
           "$SIGNER_IDENTITY"
         env:
@@ -68,10 +69,7 @@ jobs:
           SIGNER_IDENTITY: "https://github.com/${{ github.workflow_ref }}"
 
       - name: Inspect PEP 740 attestations
-        run: |
-          # resolution fails without betterproto and protobuf-specs
-          uv pip install "pypi-attestations==0.0.12" "sigstore-protobuf-specs==0.3.2" "betterproto==2.0.0b6"
-          python -m pypi_attestations inspect dist/*.publish.attestation
+        run: pypi-attestations inspect dist/*.publish.attestation
 
       - name: Prepare attestation bundles for uploading
         run: |
