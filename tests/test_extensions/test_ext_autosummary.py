@@ -65,7 +65,10 @@ def test_autosummary_generate_content_for_module_imported_members(app):
     ]
     assert context['functions'] == ['bar']
     assert context['all_functions'] == ['_quux', 'bar']
-    assert context['classes'] == ['Class', 'Foo']
+    if sys.version_info >= (3, 14, 0, 'alpha', 5):
+        assert context['classes'] == ['Class', 'Foo', 'Union']
+    else:
+        assert context['classes'] == ['Class', 'Foo']
     assert context['all_classes'] == ['Class', 'Foo', '_Baz']
     assert context['exceptions'] == ['Exc']
     assert context['all_exceptions'] == ['Exc', '_Exc']
