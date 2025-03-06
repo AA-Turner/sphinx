@@ -1,30 +1,20 @@
-"""Test the autosummary extension."""
-
 from __future__ import annotations
 
 import sys
-import types
 
 from tests.conftest import _TESTS_ROOT
 
 sys.path.insert(0, str(_TESTS_ROOT / 'roots/test-ext-autosummary'))
 
 
-def _is_class_documenter(obj):
-    return isinstance(obj, type)
-
-
 def test_autosummary_generate_content_for_module_imported_members():
-    import autosummary_dummy_module
+    import autosummary_dummy_module as obj
 
-    obj = autosummary_dummy_module
-    assert isinstance(obj, types.ModuleType)
     public: list[str] = []
     items: list[str] = []
 
-    all_members = {name: getattr(obj, name) for name in dir(obj)}
-    for name, value in all_members.items():
-        if _is_class_documenter(value):
+    for name in frozenset(dir(obj)):
+        if isinstance(getattr(obj, name, None), type):
             items.append(name)
             if not name.startswith('_'):
                 public.append(name)
