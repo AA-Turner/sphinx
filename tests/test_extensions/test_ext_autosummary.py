@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 from types import SimpleNamespace
 
 from sphinx.ext.autodoc import (
@@ -21,7 +20,7 @@ from sphinx.ext.autosummary import _get_documenter
 
 from tests.conftest import _TESTS_ROOT
 
-sys.path.insert(0, str(_TESTS_ROOT / 'roots/test-ext-autosummary/autosummary_dummy_module.py'))
+sys.path.insert(0, str(_TESTS_ROOT / 'roots/test-ext-autosummary'))
 
 
 def test_autosummary_generate_content_for_module_imported_members():
