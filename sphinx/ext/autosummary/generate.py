@@ -301,18 +301,22 @@ def generate_autosummary_content(
     name: str,
     obj: Any,
     parent: Any,
+    template: AutosummaryRenderer,
+    template_name: str,
     imported_members: bool,
     recursive: bool,
+    context: dict[str, Any],
     modname: str | None = None,
     qualname: str | None = None,
     *,
     config: Config,
     events: EventManager,
     registry: SphinxComponentRegistry,
-) -> dict[str, Any]:
+) -> str:
     doc = _get_documenter(obj, parent, registry=registry)
 
     ns: dict[str, Any] = {}
+    ns.update(context)
 
     if doc.objtype == 'module':
         scanner = ModuleScanner(obj, config=config, events=events, registry=registry)
@@ -429,7 +433,10 @@ def generate_autosummary_content(
     ns['objtype'] = doc.objtype
     ns['underline'] = len(name) * '='
 
-    return ns
+    if template_name:
+        return template.render(template_name, ns)
+    else:
+        return template.render(doc.objtype, ns)
 
 
 def _skip_member(obj: Any, name: str, objtype: str, *, events: EventManager) -> bool:
