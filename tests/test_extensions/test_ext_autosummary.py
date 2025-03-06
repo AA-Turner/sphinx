@@ -39,8 +39,8 @@ def test_autosummary_generate_content_for_module_imported_members():
                 public.append(name)
 
     if sys.version_info >= (3, 14, 0, 'alpha', 5):
-        assert public == ['Class', 'Foo', 'Union']
-        assert items == ['Class', 'Foo', 'Union', '_Baz']
+        assert public == ['Union', 'Class', 'Foo']
+        assert items == ['Union', 'Class', 'Foo', '_Baz']
     else:
         assert public == ['Class', 'Foo']
         assert items == ['Class', 'Foo', '_Baz']
