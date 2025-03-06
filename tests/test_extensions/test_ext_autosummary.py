@@ -10,7 +10,9 @@ from sphinx.ext.autosummary import _get_documenter
 from sphinx.util.inspect import safe_getattr
 
 
-@pytest.mark.sphinx('html', testroot='ext-autosummary', copy_test_root=True)
+@pytest.mark.sphinx('html', testroot='ext-autosummary', confoverrides={
+    'extensions': ['sphinx.ext.autosummary'],
+}, copy_test_root=True)
 def test_autosummary_generate_content_for_module_imported_members(app):
     import autosummary_dummy_module
 
