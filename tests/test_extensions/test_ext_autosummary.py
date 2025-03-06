@@ -35,45 +35,29 @@ DOCUMENTERS = (
 )
 
 
-def _get_documenter(obj, parent):
+def _is_class_documenter(obj):
     if isinstance(obj, types.ModuleType):
         # ModuleDocumenter.can_document_member always returns False
-        return ModuleDocumenter
+        return False
 
     # Construct a fake documenter for *parent*
-    if parent is not None:
-        parent_doc_cls = _get_documenter(parent, None)
-    else:
-        parent_doc_cls = ModuleDocumenter
-
-    if hasattr(parent, '__name__'):
-        parent_doc = parent_doc_cls(FakeDirective(), parent.__name__)
-    else:
-        parent_doc = parent_doc_cls(FakeDirective(), '')
+    parent_doc = ModuleDocumenter(FakeDirective(), '')
 
     # Get the correct documenter class for *obj*
-    classes = [
-        cls for cls in DOCUMENTERS
-        if cls.can_document_member(obj, '', False, parent_doc)
-    ]
-    if classes:
-        classes.sort(key=lambda cls: cls.priority)
-        return classes[-1]
-    else:
-        return DataDocumenter
+    return ClassDocumenter.can_document_member(obj, '', False, parent_doc)
 
 
 def test_autosummary_generate_content_for_module_imported_members():
     import autosummary_dummy_module
 
     obj = autosummary_dummy_module
+    assert isinstance(obj, types.ModuleType)
     public: list[str] = []
     items: list[str] = []
 
     all_members = {name: getattr(obj, name) for name in dir(obj)}
     for name, value in all_members.items():
-        documenter = _get_documenter(value, obj)
-        if documenter.objtype == 'class':
+        if _is_class_documenter(value):
             items.append(name)
             if not name.startswith('_'):
                 public.append(name)
