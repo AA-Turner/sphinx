@@ -7,7 +7,6 @@ import sys
 import pytest
 
 from sphinx.ext.autosummary import _get_documenter
-from sphinx.ext.autosummary.generate import _skip_member
 from sphinx.util.inspect import safe_getattr
 
 
@@ -28,19 +27,10 @@ def test_autosummary_generate_content_for_module_imported_members(app):
     for name, value in all_members.items():
         documenter = _get_documenter(value, obj, registry=app.registry)
         if documenter.objtype == 'class':
-            # skip imported members if expected
-            skipped = _skip_member(value, name, documenter.objtype, events=app.events)
-            if skipped is True:
-                pass
-            elif skipped is False:
-                # show the member forcedly
-                items.append(name)
+            items.append(name)
+            if not name.startswith('_'):
+                # considers member as public
                 public.append(name)
-            else:
-                items.append(name)
-                if not name.startswith('_'):
-                    # considers member as public
-                    public.append(name)
 
     if sys.version_info >= (3, 14, 0, 'alpha', 5):
         assert public == ['Class', 'Foo', 'Union']
