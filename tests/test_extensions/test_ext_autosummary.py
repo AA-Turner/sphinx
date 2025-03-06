@@ -14,7 +14,8 @@ def test_autosummary_generate_content_for_module_imported_members():
     items: list[str] = []
 
     for name in frozenset(dir(obj)):
-        if isinstance(getattr(obj, name, None), type):
+        value = getattr(obj, name, None)
+        if isinstance(value, type) and not issubclass(value, BaseException):
             items.append(name)
             if not name.startswith('_'):
                 public.append(name)
