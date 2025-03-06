@@ -5,8 +5,6 @@ from __future__ import annotations
 import sys
 from types import SimpleNamespace
 
-import pytest
-
 from sphinx.ext.autodoc import (
     AttributeDocumenter,
     ClassDocumenter,
@@ -19,44 +17,35 @@ from sphinx.ext.autodoc import (
     PropertyDocumenter,
 )
 from sphinx.ext.autosummary import _get_documenter
-from sphinx.ext.autosummary.generate import setup_documenters
-from sphinx.registry import SphinxComponentRegistry
-from sphinx.util.inspect import safe_getattr
 
 
 def test_autosummary_generate_content_for_module_imported_members():
     import autosummary_dummy_module
 
-    registry = SphinxComponentRegistry()
-    for documenter in (
-        ModuleDocumenter,
-        ClassDocumenter,
-        ExceptionDocumenter,
-        DataDocumenter,
-        FunctionDocumenter,
-        MethodDocumenter,
-        AttributeDocumenter,
-        DecoratorDocumenter,
-        PropertyDocumenter,
-    ):
-        registry.add_documenter(documenter.objtype, documenter)
-
+    registry = SimpleNamespace(documenters={
+        documenter.objtype: documenter
+        for documenter in (
+            ModuleDocumenter,
+            ClassDocumenter,
+            ExceptionDocumenter,
+            DataDocumenter,
+            FunctionDocumenter,
+            MethodDocumenter,
+            AttributeDocumenter,
+            DecoratorDocumenter,
+            PropertyDocumenter,
+        )
+    })
     obj = autosummary_dummy_module
     public: list[str] = []
     items: list[str] = []
 
-    all_members = {}
-    for name in dir(obj):
-        try:
-            all_members[name] = safe_getattr(obj, name)
-        except AttributeError:
-            continue
+    all_members = {name: getattr(obj, name) for name in dir(obj)}
     for name, value in all_members.items():
         documenter = _get_documenter(value, obj, registry=registry)
         if documenter.objtype == 'class':
             items.append(name)
             if not name.startswith('_'):
-                # considers member as public
                 public.append(name)
 
     if sys.version_info >= (3, 14, 0, 'alpha', 5):
