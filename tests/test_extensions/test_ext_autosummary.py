@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import sys
-from unittest.mock import Mock
 
 import pytest
 
@@ -19,24 +18,16 @@ def _unload_target_module():
 def test_autosummary_generate_content_for_module_imported_members(app):
     import autosummary_dummy_module
 
-    template = Mock()
-
-    generate_autosummary_content(
+    context = generate_autosummary_content(
         'autosummary_dummy_module',
         autosummary_dummy_module,
         None,
-        template,
-        None,
         True,
         False,
-        {},
         config=app.config,
         events=app.events,
         registry=app.registry,
     )
-    assert template.render.call_args[0][0] == 'module'
-
-    context = template.render.call_args[0][1]
     assert context['members'] == [
         'CONSTANT1',
         'CONSTANT2',
