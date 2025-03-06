@@ -4,6 +4,8 @@ import sys
 from pathlib import Path
 from typing import Union
 
+import pytest
+
 
 class Foo:
     pass
@@ -21,14 +23,16 @@ class _Exc(Exception):
     pass
 
 
-def test_autosummary_generate_content_for_module_imported_members():
+def test_class():
     assert isinstance(Path, type)
     assert not issubclass(Path, BaseException)
     if sys.version_info >= (3, 14, 0, 'alpha', 5):
         assert isinstance(Union, type)
+        assert not issubclass(Union, BaseException)
     else:
         assert not isinstance(Union, type)
-    assert not issubclass(Union, BaseException)
+        with pytest.raises(TypeError):
+            issubclass(Union, BaseException)
     assert isinstance(Foo, type)
     assert not issubclass(Foo, BaseException)
     assert isinstance(_Baz, type)
