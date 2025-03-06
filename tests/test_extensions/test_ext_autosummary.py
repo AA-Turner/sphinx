@@ -7,18 +7,39 @@ from types import SimpleNamespace
 
 import pytest
 
+from sphinx.ext.autodoc import (
+    AttributeDocumenter,
+    ClassDocumenter,
+    DataDocumenter,
+    DecoratorDocumenter,
+    ExceptionDocumenter,
+    FunctionDocumenter,
+    MethodDocumenter,
+    ModuleDocumenter,
+    PropertyDocumenter,
+)
 from sphinx.ext.autosummary import _get_documenter
 from sphinx.ext.autosummary.generate import setup_documenters
 from sphinx.registry import SphinxComponentRegistry
 from sphinx.util.inspect import safe_getattr
 
 
-def test_autosummary_generate_content_for_module_imported_members(app):
+def test_autosummary_generate_content_for_module_imported_members():
     import autosummary_dummy_module
 
     registry = SphinxComponentRegistry()
-    app = SimpleNamespace(registry=registry)
-    setup_documenters(app)
+    for documenter in (
+        ModuleDocumenter,
+        ClassDocumenter,
+        ExceptionDocumenter,
+        DataDocumenter,
+        FunctionDocumenter,
+        MethodDocumenter,
+        AttributeDocumenter,
+        DecoratorDocumenter,
+        PropertyDocumenter,
+    ):
+        registry.add_documenter(documenter.objtype, documenter)
 
     obj = autosummary_dummy_module
     public: list[str] = []
