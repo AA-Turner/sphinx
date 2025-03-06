@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import inspect
 import sys
+import types
 
 from sphinx.ext.autodoc import (
     AttributeDocumenter,
@@ -36,7 +36,7 @@ DOCUMENTERS = (
 
 
 def _get_documenter(obj, parent):
-    if inspect.ismodule(obj):
+    if isinstance(obj, types.ModuleType):
         # ModuleDocumenter.can_document_member always returns False
         return ModuleDocumenter
 
