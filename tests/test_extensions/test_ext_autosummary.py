@@ -7,7 +7,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from sphinx.ext.autosummary.generate import generate_autosummary_content
+from sphinx.ext.autosummary import _get_documenter
+from sphinx.ext.autosummary.generate import generate_autosummary_content, ModuleScanner, _get_members
 
 
 @pytest.fixture(autouse=True)
@@ -85,3 +86,24 @@ def test_autosummary_generate_content_for_module_imported_members(app):
     assert context['objname'] == ''
     assert context['name'] == ''
     assert context['objtype'] == 'module'
+
+    imported_members = True
+    obj = autosummary_dummy_module
+    doc = _get_documenter(obj, None, registry=app.registry)
+    scanner = ModuleScanner(obj, config=app.config, events=app.events, registry=app.registry)
+    scanner.scan(imported_members)
+    classes, all_classes = _get_members(
+        doc,
+        obj,
+        {'class'},
+        config=app.config,
+        events=app.events,
+        registry=app.registry,
+        imported=True,
+    )
+    if sys.version_info >= (3, 14, 0, 'alpha', 5):
+        assert classes == ['Class', 'Foo', 'Union']
+        assert all_classes == ['Class', 'Foo', 'Union', '_Baz']
+    else:
+        assert classes == ['Class', 'Foo']
+        assert all_classes == ['Class', 'Foo', '_Baz']
