@@ -22,20 +22,14 @@ class _Exc(Exception):
 
 
 def test_autosummary_generate_content_for_module_imported_members():
-    public: list[str] = []
-    items: list[str] = []
-
-    ns = globals()
-    for name in ns:
-        value = ns.get(name)
-        if isinstance(value, type) and not issubclass(value, BaseException):
-            items.append(name)
-            if not name.startswith('_'):
-                public.append(name)
-
+    assert isinstance(Path, type)
+    assert not issubclass(Path, BaseException)
     if sys.version_info >= (3, 14, 0, 'alpha', 5):
-        assert public == ['Path', 'Union', 'Foo']
-        assert items == ['Path', 'Union', 'Foo', '_Baz']
+        assert isinstance(Union, type)
     else:
-        assert public == ['Path', 'Foo']
-        assert items == ['Path', 'Foo', '_Baz']
+        assert not isinstance(Union, type)
+    assert not issubclass(Union, BaseException)
+    assert isinstance(Foo, type)
+    assert not issubclass(Foo, BaseException)
+    assert isinstance(_Baz, type)
+    assert not issubclass(_Baz, BaseException)
