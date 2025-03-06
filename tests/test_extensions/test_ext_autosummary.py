@@ -1,13 +1,8 @@
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 from typing import Union
-
-from tests.conftest import _TESTS_ROOT
-
-sys.path.insert(0, str(_TESTS_ROOT / 'roots/test-ext-autosummary'))
-
-from autosummary_class_module import Class
 
 
 class Foo:
@@ -39,8 +34,8 @@ def test_autosummary_generate_content_for_module_imported_members():
                 public.append(name)
 
     if sys.version_info >= (3, 14, 0, 'alpha', 5):
-        assert public == ['Union', 'Class', 'Foo']
-        assert items == ['Union', 'Class', 'Foo', '_Baz']
+        assert public == ['Path', 'Union', 'Foo']
+        assert items == ['Path', 'Union', 'Foo', '_Baz']
     else:
-        assert public == ['Class', 'Foo']
-        assert items == ['Class', 'Foo', '_Baz']
+        assert public == ['Path', 'Foo']
+        assert items == ['Path', 'Foo', '_Baz']
