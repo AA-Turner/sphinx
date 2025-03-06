@@ -3,18 +3,22 @@
 from __future__ import annotations
 
 import sys
+from types import SimpleNamespace
 
 import pytest
 
 from sphinx.ext.autosummary import _get_documenter
+from sphinx.ext.autosummary.generate import setup_documenters
+from sphinx.registry import SphinxComponentRegistry
 from sphinx.util.inspect import safe_getattr
 
 
-@pytest.mark.sphinx('html', testroot='ext-autosummary', confoverrides={
-    'extensions': ['sphinx.ext.autosummary'],
-}, copy_test_root=True)
 def test_autosummary_generate_content_for_module_imported_members(app):
     import autosummary_dummy_module
+
+    registry = SphinxComponentRegistry()
+    app = SimpleNamespace(registry=registry)
+    setup_documenters(app)
 
     obj = autosummary_dummy_module
     public: list[str] = []
@@ -27,7 +31,7 @@ def test_autosummary_generate_content_for_module_imported_members(app):
         except AttributeError:
             continue
     for name, value in all_members.items():
-        documenter = _get_documenter(value, obj, registry=app.registry)
+        documenter = _get_documenter(value, obj, registry=registry)
         if documenter.objtype == 'class':
             items.append(name)
             if not name.startswith('_'):
