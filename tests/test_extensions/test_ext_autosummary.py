@@ -7,7 +7,7 @@ import sys
 import pytest
 
 from sphinx.ext.autosummary import _get_documenter
-from sphinx.ext.autosummary.generate import _skip_member, members_of
+from sphinx.ext.autosummary.generate import _skip_member
 from sphinx.util.inspect import safe_getattr
 
 
@@ -20,7 +20,7 @@ def test_autosummary_generate_content_for_module_imported_members(app):
     items: list[str] = []
 
     all_members = {}
-    for name in members_of(obj, config=app.config):
+    for name in dir(obj):
         try:
             all_members[name] = safe_getattr(obj, name)
         except AttributeError:
