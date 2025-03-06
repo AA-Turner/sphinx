@@ -7,8 +7,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from sphinx.ext.autosummary import _get_documenter
-from sphinx.ext.autosummary.generate import generate_autosummary_content, ModuleScanner, _get_members
+from sphinx.ext.autodoc import ModuleDocumenter
+from sphinx.ext.autosummary.generate import _get_members, generate_autosummary_content
 
 
 @pytest.fixture(autouse=True)
@@ -88,9 +88,8 @@ def test_autosummary_generate_content_for_module_imported_members(app):
     assert context['objtype'] == 'module'
 
     obj = autosummary_dummy_module
-    doc = _get_documenter(obj, None, registry=app.registry)
     classes, all_classes = _get_members(
-        doc,
+        ModuleDocumenter,
         obj,
         {'class'},
         config=app.config,
