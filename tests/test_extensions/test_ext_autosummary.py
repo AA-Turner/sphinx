@@ -58,9 +58,10 @@ def test_autosummary_generate_content_for_module_imported_members(app):
     assert context['all_functions'] == ['_quux', 'bar']
     if sys.version_info >= (3, 14, 0, 'alpha', 5):
         assert context['classes'] == ['Class', 'Foo', 'Union']
+        assert context['all_classes'] == ['Class', 'Foo', 'Union', '_Baz']
     else:
         assert context['classes'] == ['Class', 'Foo']
-    assert context['all_classes'] == ['Class', 'Foo', '_Baz']
+        assert context['all_classes'] == ['Class', 'Foo', '_Baz']
     assert context['exceptions'] == ['Exc']
     assert context['all_exceptions'] == ['Exc', '_Exc']
     assert context['attributes'] == ['CONSTANT1', 'qux', 'quuz', 'non_imported_member']
