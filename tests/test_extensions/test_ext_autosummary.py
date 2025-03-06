@@ -6,9 +6,9 @@ import sys
 
 import pytest
 
-from sphinx.ext.autodoc import ModuleDocumenter
 from sphinx.ext.autosummary import _get_documenter
-from sphinx.ext.autosummary.generate import _get_all_members, _skip_member
+from sphinx.ext.autosummary.generate import _skip_member, members_of
+from sphinx.util.inspect import safe_getattr
 
 
 @pytest.mark.sphinx('html', testroot='ext-autosummary', copy_test_root=True)
@@ -19,7 +19,12 @@ def test_autosummary_generate_content_for_module_imported_members(app):
     public: list[str] = []
     items: list[str] = []
 
-    all_members = _get_all_members(ModuleDocumenter, obj, config=app.config)
+    all_members = {}
+    for name in members_of(obj, config=app.config):
+        try:
+            all_members[name] = safe_getattr(obj, name)
+        except AttributeError:
+            continue
     for name, value in all_members.items():
         documenter = _get_documenter(value, obj, registry=app.registry)
         if documenter.objtype == 'class':
