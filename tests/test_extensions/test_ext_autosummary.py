@@ -87,11 +87,8 @@ def test_autosummary_generate_content_for_module_imported_members(app):
     assert context['name'] == ''
     assert context['objtype'] == 'module'
 
-    imported_members = True
     obj = autosummary_dummy_module
     doc = _get_documenter(obj, None, registry=app.registry)
-    scanner = ModuleScanner(obj, config=app.config, events=app.events, registry=app.registry)
-    scanner.scan(imported_members)
     classes, all_classes = _get_members(
         doc,
         obj,
