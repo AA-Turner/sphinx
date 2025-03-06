@@ -13,7 +13,7 @@ def test_autosummary_generate_content_for_module_imported_members():
     public: list[str] = []
     items: list[str] = []
 
-    for name in frozenset(dir(obj)):
+    for name in dir(obj):
         value = getattr(obj, name, None)
         if isinstance(value, type) and not issubclass(value, BaseException):
             items.append(name)
