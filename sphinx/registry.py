@@ -69,6 +69,7 @@ EXTENSION_BLACKLIST = {
     'sphinxjp.themecore': '1.2',
     'sphinxcontrib-napoleon': '1.3',
     'sphinxprettysearchresults': '2.0.0',
+    'sphinx_carousel.carousel': '8.2.0',
 }
 
 
